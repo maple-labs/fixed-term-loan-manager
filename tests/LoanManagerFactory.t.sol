@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.7;
+
+import { Address, TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
+
+import { LoanManager }            from "../contracts/LoanManager.sol";
+import { LoanManagerFactory }     from "../contracts/proxy/LoanManagerFactory.sol";
+import { LoanManagerInitializer } from "../contracts/proxy/LoanManagerInitializer.sol";
+
+import { MockGlobals, MockPool } from "./mocks/Mocks.sol";
+
+contract LoanManagerFactoryBase is TestUtils {
+
+    address internal governor;
+    address internal implementation;
+    address internal initializer;
+
+    MockGlobals internal globals;
+    MockPool    internal pool;
+
+    LoanManagerFactory internal factory;
+
+    function setUp() public virtual {
+        governor       = address(new Address());
+        implementation = address(new LoanManager());
+        initializer    = address(new LoanManagerInitializer());
+
+        globals = new MockGlobals(governor);
+        pool    = new MockPool();
+
+        vm.startPrank(governor);
+        factory = new LoanManagerFactory(address(globals));
+        factory.registerImplementation(1, implementation, initializer);
+        factory.setDefaultVersion(1);
+        vm.stopPrank();
+
+        globals.setValidPoolDeployer(address(this), true);
+    }
+
+    function test_createInstance_notPoolDeployer() external {
+        globals.setValidPoolDeployer(address(this), false);
+        vm.expectRevert("LMF:CI:NOT_DEPLOYER");
+        LoanManager(factory.createInstance(abi.encode(address(pool)), "SALT"));
+
+        globals.setValidPoolDeployer(address(this), true);
+        LoanManager(factory.createInstance(abi.encode(address(pool)), "SALT"));
+    }
+
+    function testFail_createInstance_notPool() external {
+        factory.createInstance(abi.encode(address(1)), "SALT");
+    }
+
+    function testFail_createInstance_collision() external {
+        factory.createInstance(abi.encode(address(pool)), "SALT");
+        factory.createInstance(abi.encode(address(pool)), "SALT");
+    }
+
+    function test_createInstance_success() external {
+        pool.__setAsset(address(1));
+        pool.__setManager(address(2));
+
+        LoanManager loanManager_ = LoanManager(factory.createInstance(abi.encode(address(pool)), "SALT"));
+
+        assertEq(loanManager_.pool(),        address(pool));
+        assertEq(loanManager_.fundsAsset(),  address(1));
+        assertEq(loanManager_.poolManager(), address(2));
+    }
+
+}
