@@ -1,5 +1,5 @@
 name: fixed-term-loan-manager
-version: 1.0.0
+version: 2.0.0
 source: contracts
 packages:
   - path: contracts/proxy/LoanManagerFactory.sol
@@ -10,4 +10,4 @@ packages:
     contractName: LoanManagerStorage
   - path: contracts/LoanManager.sol
     contractName: LoanManager
-customDescription: Fixed Term Loan Manager V1 Artifacts and ABIs
+customDescription: Fixed Term Loan Manager V2 Artifacts and ABIs

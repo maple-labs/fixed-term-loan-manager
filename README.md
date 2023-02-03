@@ -1,4 +1,4 @@
-# Maple Fixed Term Loan Manager V1 (Transition Loan Manager)
+# Maple Fixed Term Loan Manager V2 (Loan Manager)
 
 ![Foundry CI](https://github.com/maple-labs/fixed-term-loan-manager-private/actions/workflows/forge.yaml/badge.svg)
 [![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple/maple-for-developers/protocol-overview)
@@ -19,6 +19,7 @@ This repository contains the core contracts of the Maple V2 protocol that are re
 ## Dependencies/Inheritance
 
 Contracts in this repo inherit and import code from:
+- [`maple-labs/erc20-helper`](https://github.com/maple-labs/erc20-helper)
 - [`maple-labs/maple-proxy-factory`](https://github.com/maple-labs/maple-proxy-factory)
 
 Contracts inherit and import code in the following ways:
@@ -32,8 +33,8 @@ Versions of dependencies can be checked with `git submodule status`.
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
 
 ```sh
-git clone git@github.com:maple-labs/fixed-term-loan-manager.git
-cd fixed-term-loan-manager
+git clone git@github.com:maple-labs/pool-v2-private.git
+cd pool-v2-private
 forge install
 ```
 

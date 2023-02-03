@@ -9,6 +9,14 @@ contract LoanManagerHarness is LoanManager {
         paymentId_ = _addPaymentToList(paymentDueDate_);
     }
 
+    function disburseLiquidationFunds(address loan_, uint256 recoveredFunds_, uint256 platformFees_, uint256 remainingLosses_) external {
+        _disburseLiquidationFunds(loan_, recoveredFunds_, platformFees_, remainingLosses_);
+    }
+
+    function distributeClaimedFunds(address loan_, uint256 principal_, uint256 interest_) external {
+        _distributeClaimedFunds(loan_, principal_, interest_);
+    }
+
     function removePaymentFromList(uint256 paymentId_) external {
         _removePaymentFromList(paymentId_);
     }
@@ -45,8 +53,16 @@ contract LoanManagerHarness is LoanManager {
         return _uint48(input_);
     }
 
+    function castUint96(uint256 input_) external pure returns (uint96 output_) {
+        return _uint96(input_);
+    }
+
     function castUint112(uint256 input_) external pure returns (uint112 output_) {
         return _uint112(input_);
+    }
+
+    function castUint120(uint256 input_) external pure returns (uint120 output_) {
+        return _uint120(input_);
     }
 
     function castUint128(uint256 input_) external pure returns (uint128 output_) {

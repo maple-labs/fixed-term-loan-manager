@@ -12,12 +12,48 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev   Emitted when `setAllowedSlippage` is called.
+     *  @param collateralAsset_ Address of a collateral asset.
+     *  @param newSlippage_     New value for `allowedSlippage`.
+     */
+    event AllowedSlippageSet(address collateralAsset_, uint256 newSlippage_);
+
+    /**
+     *  @dev   Funds have been claimed and distributed into the Pool.
+     *  @param loan_        The address of the loan contract.
+     *  @param principal_   The amount of principal paid.
+     *  @param netInterest_ The amount of net interest paid.
+     */
+    event FundsDistributed(address indexed loan_, uint256 principal_, uint256 netInterest_);
+
+    /**
      *  @dev   Emitted when the issuance parameters are changed.
      *  @param domainEnd_         The timestamp of the domain end.
      *  @param issuanceRate_      New value for the issuance rate.
      *  @param accountedInterest_ The amount of accounted interest.
      */
     event IssuanceParamsUpdated(uint48 domainEnd_, uint256 issuanceRate_, uint112 accountedInterest_);
+
+    /**
+     *  @dev   Emitted when the loanTransferAdmin is set by the PoolDelegate.
+     *  @param loanTransferAdmin_ The address of the admin that can transfer loans.
+     */
+    event LoanTransferAdminSet(address indexed loanTransferAdmin_);
+
+    /**
+     *  @dev   A fee payment was made.
+     *  @param loan_                  The address of the loan contract.
+     *  @param delegateManagementFee_ The amount of delegate management fee paid.
+     *  @param platformManagementFee_ The amount of platform management fee paid.
+    */
+    event ManagementFeesPaid(address indexed loan_, uint256 delegateManagementFee_, uint256 platformManagementFee_);
+
+    /**
+     *  @dev   Emitted when `setMinRatio` is called.
+     *  @param collateralAsset_ Address of a collateral asset.
+     *  @param newMinRatio_     New value for `minRatio`.
+     */
+    event MinRatioSet(address collateralAsset_, uint256 newMinRatio_);
 
     /**
      *  @dev   Emitted when a payment is removed from the LoanManager payments array.
@@ -59,10 +95,72 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     /**************************************************************************************************************************************/
 
     /**
-     *  @dev   Adds a new loan to this loan manager.
-     *  @param loan_ The address of the loan.
+     *  @dev   Accepts new loan terms triggering a loan refinance.
+     *  @param loan_       Loan to be refinanced.
+     *  @param refinancer_ The address of the refinancer.
+     *  @param deadline_   The new deadline to execute the refinance.
+     *  @param calls_      The encoded calls to set new loan terms.
      */
-    function add(address loan_) external;
+    function acceptNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external;
+
+    /**
+     *  @dev   Called by loans when payments are made, updating the accounting.
+     *  @param principal_              The amount of principal paid.
+     *  @param interest_               The amount of interest paid.
+     *  @param previousPaymentDueDate_ The previous payment due date.
+     *  @param nextPaymentDueDate_     The new payment due date.
+     */
+    function claim(uint256 principal_, uint256 interest_, uint256 previousPaymentDueDate_, uint256 nextPaymentDueDate_) external;
+
+    /**
+     *  @dev    Finishes the collateral liquidation.
+     *  @param  loan_            Loan that had its collateral liquidated.
+     *  @return remainingLosses_ The amount of remaining losses.
+     *  @return platformFees_    The amount of platform fees.
+     */
+    function finishCollateralLiquidation(address loan_) external returns (uint256 remainingLosses_, uint256 platformFees_);
+
+    /**
+     *  @dev   Funds a new loan.
+     *  @param loan_ Loan to be funded.
+     */
+    function fund(address loan_) external;
+
+    /**
+     *  @dev   Triggers the loan impairment for a loan.
+     *  @param loan_       Loan to trigger the loan impairment.
+     *  @param isGovernor_ True if called by the governor.
+     */
+    function impairLoan(address loan_, bool isGovernor_) external;
+
+    /**
+     *  @dev   Removes the loan impairment for a loan.
+     *  @param loan_               Loan to remove the loan impairment.
+     *  @param isCalledByGovernor_ True if `impairLoan` was called by the governor.
+     */
+    function removeLoanImpairment(address loan_, bool isCalledByGovernor_) external;
+
+    /**
+     *  @dev   Sets the allowed slippage for a collateral asset liquidation.
+     *  @param collateralAsset_  Address of a collateral asset.
+     *  @param allowedSlippage_  New value for `allowedSlippage`.
+     */
+    function setAllowedSlippage(address collateralAsset_, uint256 allowedSlippage_) external;
+
+    /**
+     *  @dev   Sets the address of the account that is able to call `setOwnershipTo` and `takeOwnership` for multiple loans.
+     *  @param newLoanTransferAdmin_ Address of the new admin.
+     */
+    function setLoanTransferAdmin(address newLoanTransferAdmin_) external;
+
+    /**
+     *  @dev   Sets the minimum ratio for a collateral asset liquidation.
+     *         This ratio is expressed as a decimal representation of units of fundsAsset
+     *         per unit collateralAsset in fundsAsset decimal precision.
+     *  @param collateralAsset_  Address of a collateral asset.
+     *  @param minRatio_         New value for `minRatio`.
+     */
+    function setMinRatio(address collateralAsset_, uint256 minRatio_) external;
 
     /**
      *  @dev   Sets the ownership of loans to an address.
@@ -77,6 +175,23 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
      */
     function takeOwnership(address[] calldata loans_) external;
 
+    /**
+     *  @dev    Triggers the default of a loan.
+     *  @param  loan_                Loan to trigger the default.
+     *  @param  liquidatorFactory_   Factory that will be used to deploy the liquidator.
+     *  @return liquidationComplete_ True if the liquidation is completed in the same transaction (uncollateralized).
+     *  @return remainingLosses_     The amount of remaining losses.
+     *  @return platformFees_        The amount of platform fees.
+     */
+    function triggerDefault(address loan_, address liquidatorFactory_)
+        external returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
+
+    /**
+     *  @dev Updates the issuance parameters of the LoanManager, callable by the Governor and the PoolDelegate.
+     *       Useful to call when `block.timestamp` is greater than `domainEnd` and the LoanManager is not accruing interest.
+     */
+    function updateAccounting() external;
+
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
     /**************************************************************************************************************************************/
@@ -85,13 +200,13 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
      *  @dev    Returns the precision used for the contract.
      *  @return precision_ The precision used for the contract.
      */
-    function PRECISION() external view returns (uint256 precision_);
+    function PRECISION() external returns (uint256 precision_);
 
     /**
      *  @dev    Returns the value considered as the hundred percent.
      *  @return hundredPercent_ The value considered as the hundred percent.
      */
-    function HUNDRED_PERCENT() external view returns (uint256 hundredPercent_);
+    function HUNDRED_PERCENT() external returns (uint256 hundredPercent_);
 
     /**
      *  @dev    Gets the amount of assets under the management of the contract.
@@ -106,15 +221,42 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     function getAccruedInterest() external view returns (uint256 accruedInterest_);
 
     /**
+     *  @dev    Gets the expected amount of an asset given the input amount.
+     *  @param  collateralAsset_ The collateral asset that is being liquidated.
+     *  @param  swapAmount_      The swap amount of collateral asset.
+     *  @return returnAmount_    The desired return amount of funds asset.
+     */
+    function getExpectedAmount(address collateralAsset_, uint256 swapAmount_) external view returns (uint256 returnAmount_);
+
+    /**
      *  @dev    Gets the address of the Maple globals contract.
      *  @return globals_ The address of the Maple globals contract.
      */
     function globals() external view returns (address globals_);
 
     /**
-     *  @dev    Gets the address of the migration admin.
-     *  @return migrationAdmin_ The address of the migration admin.
+     *  @dev    Gets the address of the governor contract.
+     *  @return governor_ The address of the governor contract.
      */
-    function migrationAdmin() external view returns (address migrationAdmin_);
+    function governor() external view returns (address governor_);
+
+    /**
+     *  @dev    Returns whether or not a liquidation is in progress.
+     *  @param  loan_     The address of the loan contract.
+     *  @return isActive_ True if a liquidation is in progress.
+     */
+    function isLiquidationActive(address loan_) external view returns (bool isActive_);
+
+    /**
+     *  @dev    Gets the address of the pool delegate.
+     *  @return poolDelegate_ The address of the pool delegate.
+     */
+    function poolDelegate() external view returns (address poolDelegate_);
+
+    /**
+     *  @dev    Gets the address of the Maple treasury.
+     *  @return treasury_ The address of the Maple treasury.
+     */
+    function mapleTreasury() external view returns (address treasury_);
 
 }
