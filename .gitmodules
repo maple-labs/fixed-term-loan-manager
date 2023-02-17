@@ -11,3 +11,6 @@
 [submodule "modules/maple-proxy-factory"]
 	path = modules/maple-proxy-factory
 	url = git@github.com:maple-labs/maple-proxy-factory.git
+[submodule "modules/forge-std"]
+	path = modules/forge-std
+	url = https://github.com/foundry-rs/forge-std.git

@@ -25,6 +25,8 @@ interface IMapleGlobalsLike {
 
     function governor() external view returns (address governor_);
 
+    function isFactory(bytes32 factoryId_, address factory_) external view returns (bool isValid_);
+
     function isPoolDeployer(address poolDeployer_) external view returns (bool isPoolDeployer_);
 
     function isValidScheduledCall(address caller_, address contract_, bytes32 functionId_, bytes calldata callData_)
@@ -88,6 +90,8 @@ interface IPoolLike is IERC20Like {
 interface IPoolManagerLike {
 
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate_);
+
+    function factory() external view returns (address factory_);
 
     function hasSufficientCover() external view returns (bool hasSufficientCover_);
 

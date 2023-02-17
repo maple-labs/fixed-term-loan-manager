@@ -7,6 +7,7 @@ import { LoanManagerStorage } from "../../contracts/proxy/LoanManagerStorage.sol
 
 contract MockGlobals {
 
+    bool internal _isFactory;
     bool internal _isValidScheduledCall;
 
     address public governor;
@@ -23,8 +24,16 @@ contract MockGlobals {
         governor = governor_;
     }
 
+    function isFactory(bytes32, address) external view returns (bool isFactory_) {
+        isFactory_ = _isFactory;
+    }
+
     function isValidScheduledCall(address, address, bytes32, bytes calldata) external view returns (bool isValid_) {
         isValid_ = _isValidScheduledCall;
+    }
+
+    function __setIsFactory(bool isFactory_) external {
+        _isFactory = isFactory_;
     }
 
     function __setIsValidScheduledCall(bool isValid_) external {
@@ -235,9 +244,15 @@ contract MockPool {
 
 contract MockPoolManager {
 
+    address _factory;
+
     address public poolDelegate;
 
     uint256 public delegateManagementFeeRate;
+
+    function factory() external view returns (address factory_) {
+        factory_ = _factory;
+    }
 
     function hasSufficientCover() external pure returns (bool hasSufficientCover_) {
         hasSufficientCover_ = true;
@@ -245,6 +260,10 @@ contract MockPoolManager {
 
     function setDelegateManagementFeeRate(uint256 delegateManagementFeeRate_) external {
         delegateManagementFeeRate = delegateManagementFeeRate_;
+    }
+
+    function __setFactory(address factory_) external {
+        _factory = factory_;
     }
 
     function __setPoolDelegate(address poolDelegate_) external {
@@ -269,4 +288,18 @@ contract MockLiquidatorFactory {
         instance_ = address(new MockLiquidator());
     }
 
+}
+
+contract MockFactory {
+
+    bool _isInstance;
+
+    function isInstance(address) external view returns (bool isInstance_) {
+        isInstance_ = _isInstance;
+    }
+
+    function __setIsInstance(bool isInstance_) external {
+        _isInstance = isInstance_;
+    }
+    
 }
