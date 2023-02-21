@@ -13,9 +13,7 @@ contract LoanManagerFactory is ILoanManagerFactory, MapleProxyFactory {
     function createInstance(bytes calldata arguments_, bytes32 salt_)
         override(IMapleProxyFactory, MapleProxyFactory) public returns (address instance_)
     {
-        if (IMapleGlobalsLike(mapleGlobals).isPoolDeployer(msg.sender)) {
-            return instance_ = super.createInstance(arguments_, salt_);
-        }
+        if (IMapleGlobalsLike(mapleGlobals).isPoolDeployer(msg.sender)) return super.createInstance(arguments_, salt_);
 
         address poolManagerFactory_ = IPoolManagerLike(msg.sender).factory();
 
