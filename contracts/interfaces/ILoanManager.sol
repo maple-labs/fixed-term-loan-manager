@@ -128,17 +128,15 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
 
     /**
      *  @dev   Triggers the loan impairment for a loan.
-     *  @param loan_       Loan to trigger the loan impairment.
-     *  @param isGovernor_ True if called by the governor.
+     *  @param loan_ Loan to trigger the loan impairment.
      */
-    function impairLoan(address loan_, bool isGovernor_) external;
+    function impairLoan(address loan_) external;
 
     /**
      *  @dev   Removes the loan impairment for a loan.
-     *  @param loan_               Loan to remove the loan impairment.
-     *  @param isCalledByGovernor_ True if `impairLoan` was called by the governor.
+     *  @param loan_ Loan to remove the loan impairment.
      */
-    function removeLoanImpairment(address loan_, bool isCalledByGovernor_) external;
+    function removeLoanImpairment(address loan_) external;
 
     /**
      *  @dev   Sets the allowed slippage for a collateral asset liquidation.
@@ -248,15 +246,15 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     function isLiquidationActive(address loan_) external view returns (bool isActive_);
 
     /**
-     *  @dev    Gets the address of the pool delegate.
-     *  @return poolDelegate_ The address of the pool delegate.
-     */
-    function poolDelegate() external view returns (address poolDelegate_);
-
-    /**
      *  @dev    Gets the address of the Maple treasury.
      *  @return treasury_ The address of the Maple treasury.
      */
     function mapleTreasury() external view returns (address treasury_);
+
+    /**
+     *  @dev    Gets the address of the pool delegate.
+     *  @return poolDelegate_ The address of the pool delegate.
+     */
+    function poolDelegate() external view returns (address poolDelegate_);
 
 }

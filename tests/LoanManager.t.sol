@@ -513,24 +513,26 @@ contract ImpairLoanTests is LoanManagerBaseTest {
         loanManager.fund(address(loan));
     }
 
-    function test_impairLoan_notManager() public {
-        // Warp 60% into the payment interval
-        vm.warp(START + 6_000);
+    function test_impairLoan_failIfPaused() external {
+        globals.__setProtocolPaused(true);
 
-        vm.expectRevert("LM:IL:NOT_PM");
-        loanManager.impairLoan(address(loan), false);
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:IL:PAUSED");
+        loanManager.impairLoan(loan);
+    }
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), false);
+    function test_impairLoan_notAuthorized() public {
+        vm.expectRevert("LM:IL:NO_AUTH");
+        loanManager.impairLoan(address(loan));
     }
 
     function test_impairLoan_alreadyImpaired() public {
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), false);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
-        vm.prank(address(poolManager));
+        vm.prank(poolDelegate);
         vm.expectRevert("LM:IL:IMPAIRED");
-        loanManager.impairLoan(address(loan), false);
+        loanManager.impairLoan(address(loan));
     }
 
     function test_impairLoan_success() public {
@@ -566,8 +568,8 @@ contract ImpairLoanTests is LoanManagerBaseTest {
             liquidator:      address(0)
         });
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), false);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
         paymentInfo = ILoanManagerStructs(address(loanManager)).payments(paymentId_);
 
@@ -667,8 +669,8 @@ contract ImpairLoanTests is LoanManagerBaseTest {
 
         assertTrue(!liquidationInfo.triggeredByGovernor);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), true);
+        vm.prank(governor);
+        loanManager.impairLoan(address(loan));
 
         paymentInfo = ILoanManagerStructs(address(loanManager)).payments(paymentId_);
 
@@ -727,68 +729,71 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
         loanManager.fund(address(loan));
     }
 
-    function test_removeLoanImpairment_notManager() public {
-        // Warp 60% into the payment interval
-        vm.warp(START + 6_000);
+    function test_removeLoanImpairment_failIfPaused() external {
+        globals.__setProtocolPaused(true);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), false);
-
-        vm.expectRevert("LM:RLI:NOT_PM");
-        loanManager.removeLoanImpairment(address(loan), false);
-
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), false);
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:RLI:PAUSED");
+        loanManager.removeLoanImpairment(loan);
     }
 
-    function test_removeLoanImpairment_calledByGovernor() public {
+    function test_removeLoanImpairment_notPoolDelegate() public {
         // Warp 60% into the payment interval
         vm.warp(START + 6_000);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), true);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
-        vm.expectRevert("LM:RLI:NOT_PM");
-        loanManager.removeLoanImpairment(address(loan), true);
+        vm.expectRevert("LM:RLI:NO_AUTH");
+        loanManager.removeLoanImpairment(address(loan));
+    }
 
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), true);
+    function test_removeLoanImpairment_notByGovernor() public {
+        // Warp 60% into the payment interval
+        vm.warp(START + 6_000);
+
+        vm.prank(governor);
+        loanManager.impairLoan(address(loan));
+
+        vm.expectRevert("LM:RLI:NO_AUTH");
+        vm.prank(poolDelegate);
+        loanManager.removeLoanImpairment(address(loan));
     }
 
     function test_removeLoanImpairment_pastDueDate() public {
         // Warp 60% into the payment interval
         vm.warp(START + 6_000);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), true);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
         // Warp past originalPaymentDueDate
         vm.warp(START + 10_000 + 1);
 
         vm.expectRevert("LM:RLI:PAST_DATE");
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), true);
+        vm.prank(poolDelegate);
+        loanManager.removeLoanImpairment(address(loan));
 
         // Warp back before the originalPaymentDueDate
         vm.warp(START + 10_000);
 
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), true);
+        vm.prank(poolDelegate);
+        loanManager.removeLoanImpairment(address(loan));
     }
 
     function test_removeLoanImpairment_delegateNotAuthorizedToRemoveGovernors() public {
         // Warp 60% into the payment interval
         vm.warp(START + 6_000);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), true); // Trigger was called by governor.
+        vm.prank(governor);
+        loanManager.impairLoan(address(loan)); // Trigger was called by governor.
 
         vm.expectRevert("LM:RLI:NO_AUTH");
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), false); // PD can't remove it.
+        vm.prank(poolDelegate);
+        loanManager.removeLoanImpairment(address(loan)); // PD can't remove it.
 
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), true); // Governor can remove it.
+        vm.prank(governor);
+        loanManager.removeLoanImpairment(address(loan)); // Governor can remove it.
     }
 
     function test_removeLoanImpairment_successWithPD() public {
@@ -798,8 +803,8 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
         // Warp 60% into the payment interval
         vm.warp(START + 6_000);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), false);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
         assertEq(paymentInfo.incomingNetInterest, 80);
         assertEq(paymentInfo.refinanceInterest,   0);
@@ -829,8 +834,8 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
 
         assertTrue(!liquidationInfo.triggeredByGovernor);
 
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), false);
+        vm.prank(poolDelegate);
+        loanManager.removeLoanImpairment(address(loan));
 
         assertEq(paymentInfo.incomingNetInterest, 80);
         assertEq(paymentInfo.refinanceInterest,   0);
@@ -884,8 +889,8 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
         // Warp 60% into the payment interval
         vm.warp(START + 6_000);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), true);
+        vm.prank(governor);
+        loanManager.impairLoan(address(loan));
 
         ILoanManagerStructs.PaymentInfo memory paymentInfo = ILoanManagerStructs(address(loanManager)).payments(paymentId_);
 
@@ -917,8 +922,8 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
 
         assertTrue(liquidationInfo.triggeredByGovernor);
 
-        vm.prank(address(poolManager));
-        loanManager.removeLoanImpairment(address(loan), true);
+        vm.prank(governor);
+        loanManager.removeLoanImpairment(address(loan));
 
         assertEq(paymentInfo.incomingNetInterest, 80);
         assertEq(paymentInfo.refinanceInterest,   0);
@@ -3137,8 +3142,8 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
         // Warp 60% into the payment interval
         vm.warp(START + 6_000);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), false);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
         assertEq(loanManager.getAccruedInterest(),         0);
         assertEq(loanManager.accountedInterest(),          48);
@@ -3192,8 +3197,8 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
         MockLoan(loan).__setCollateral(1_000_000);
         collateralAsset.mint(loan, 1_000_000);
 
-        vm.prank(address(poolManager));
-        loanManager.impairLoan(address(loan), false);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
         assertEq(loanManager.getAccruedInterest(),         0);
         assertEq(loanManager.accountedInterest(),          48);
