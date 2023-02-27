@@ -218,8 +218,9 @@ contract SingleLoanClaimTests is LoanManagerClaimBaseTest {
         loan.__setNextPaymentInterest(interest);
         loan.__setNextPaymentDueDate(START + paymentInterval);
 
-        vm.prank(address(poolManager));
-        loanManager.fund(address(loan));
+
+        vm.prank(address(poolDelegate));
+        loanManager.fund(address(loan), principal);
 
         vm.warp(START + paymentInterval + lateInterval);
 

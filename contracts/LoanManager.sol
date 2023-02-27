@@ -171,14 +171,16 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         _updateIssuanceParams(issuanceRate + newRate_ - previousRate_, accountedInterest);
     }
 
-    function fund(address loan_) external override nonReentrant {
-        require(msg.sender == poolManager, "LM:F:NOT_PM");
+    function fund(address loan_, uint256 principal_) external override nonReentrant {
+        require(msg.sender == poolDelegate(), "LM:F:NOT_PM");
 
         _advanceGlobalPaymentAccounting();
 
+        IPoolManagerLike(poolManager).requestFunds(loan_, principal_);
+
         IMapleLoanLike(loan_).fundLoan();
 
-        emit PrincipalOutUpdated(principalOut += _uint128(IMapleLoanLike(loan_).principal()));
+        emit PrincipalOutUpdated(principalOut += _uint128(principal_));
 
         // Add new issuance rate from queued payment to aggregate issuance rate.
         _updateIssuanceParams(

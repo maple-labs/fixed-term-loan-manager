@@ -97,4 +97,6 @@ interface IPoolManagerLike {
 
     function poolDelegate() external view returns (address poolDelegate_);
 
+    function requestFunds(address destination_, uint256 principal_) external;
+
 }

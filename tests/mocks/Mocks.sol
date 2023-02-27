@@ -262,6 +262,8 @@ contract MockPoolManager {
         delegateManagementFeeRate = delegateManagementFeeRate_;
     }
 
+    function requestFunds(address destination_, uint256 principal_) external { }
+
     function __setFactory(address factory_) external {
         _factory = factory_;
     }
@@ -301,5 +303,5 @@ contract MockFactory {
     function __setIsInstance(bool isInstance_) external {
         _isInstance = isInstance_;
     }
-    
+
 }
