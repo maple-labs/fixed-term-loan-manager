@@ -19,11 +19,19 @@ interface ILiquidatorLike {
 
 }
 
+interface ILoanFactoryLike {
+
+    function isLoan(address loan_) external view returns (bool isLoan_);
+
+}
+
 interface IMapleGlobalsLike {
 
     function getLatestPrice(address asset_) external view returns (uint256 price_);
 
     function governor() external view returns (address governor_);
+
+    function isBorrower(address borrower_) external view returns (bool isBorrower_);
 
     function isFactory(bytes32 factoryId_, address factory_) external view returns (bool isValid_);
 
@@ -53,6 +61,8 @@ interface IMapleLoanLike {
 
     function collateralAsset() external view returns(address asset_);
 
+    function factory() external view returns (address factory_);
+
     function fundLoan() external returns (uint256 fundsLent_);
 
     function getNextPaymentDetailedBreakdown() external view returns (
@@ -66,6 +76,8 @@ interface IMapleLoanLike {
     function nextPaymentDueDate() external view returns (uint256 nextPaymentDueDate_);
 
     function originalNextPaymentDueDate() external view returns (uint256 originalNextPaymentDueDate_);
+
+    function paymentsRemaining() external view returns (uint256 paymentsRemaining_);
 
     function principal() external view returns (uint256 principal_);
 

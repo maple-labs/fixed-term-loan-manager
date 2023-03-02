@@ -10,6 +10,7 @@ import { ILoanManager } from "./interfaces/ILoanManager.sol";
 import {
     IERC20Like,
     ILiquidatorLike,
+    ILoanFactoryLike,
     IMapleGlobalsLike,
     IMapleLoanLike,
     IPoolManagerLike
@@ -184,6 +185,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
     function fund(address loan_, uint256 principal_) external override nonReentrant {
         require(msg.sender == poolDelegate(), "LM:F:NOT_PD");
+
+        _validateLoan(loan_);
 
         _advanceGlobalPaymentAccounting();
 
@@ -797,6 +800,16 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
             issuanceRate      = issuanceRate_,
             accountedInterest = accountedInterest_
         );
+    }
+
+    function _validateLoan(address loan_) internal view {
+        address factory_ = IMapleLoanLike(loan_).factory();
+        address globals_ = globals();
+
+        require(IMapleGlobalsLike(globals()).isFactory("FT_LOAN", factory_),              "LM:VL:INVALID_LOAN_FACTORY");
+        require(ILoanFactoryLike(factory_).isLoan(loan_),                                 "LM:VL:INVALID_LOAN_INSTANCE");
+        require(IMapleGlobalsLike(globals_).isBorrower(IMapleLoanLike(loan_).borrower()), "LM:VL:INVALID_BORROWER");
+        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,                           "LM:VL:LOAN_NOT_ACTIVE");
     }
 
     /**************************************************************************************************************************************/

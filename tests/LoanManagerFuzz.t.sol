@@ -10,6 +10,7 @@ import { LoanManagerInitializer } from "../contracts/proxy/LoanManagerInitialize
 import {
     MockGlobals,
     MockLoan,
+    MockLoanFactory,
     MockPool,
     MockPoolManager
 } from "./mocks/Mocks.sol";
@@ -37,6 +38,7 @@ contract LoanManagerBaseTest is TestUtils {
     MockERC20       internal collateralAsset;
     MockERC20       internal fundsAsset;
     MockGlobals     internal globals;
+    MockLoanFactory internal loanFactory;
     MockPool        internal pool;
     MockPoolManager internal poolManager;
 
@@ -47,10 +49,15 @@ contract LoanManagerBaseTest is TestUtils {
         collateralAsset = new MockERC20("CollateralAsset", "COL", 18);
         fundsAsset      = new MockERC20("FundsAsset",      "FUN", 18);
         globals         = new MockGlobals(governor);
+        loanFactory     = new MockLoanFactory();
         poolManager     = new MockPoolManager();
         pool            = new MockPool();
 
         globals.setMapleTreasury(treasury);
+        globals.__setIsFactory(true);
+        globals.__setIsBorrower(true);
+
+        loanFactory.__setIsLoan(true);
 
         pool.__setAsset(address(fundsAsset));
         pool.__setManager(address(poolManager));
@@ -213,6 +220,8 @@ contract SingleLoanClaimTests is LoanManagerClaimBaseTest {
         MockLoan loan = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Set next payment information for loanManager to use.
+        loan.__setFactory(address(loanFactory));
+        loan.__setPaymentsRemaining(1);
         loan.__setPrincipal(principal);
         loan.__setPrincipalRequested(principal);
         loan.__setNextPaymentInterest(interest);

@@ -11,6 +11,7 @@ import {
     MockGlobals,
     MockLiquidatorFactory,
     MockLoan,
+    MockLoanFactory,
     MockLoanManagerMigrator,
     MockPool,
     MockPoolManager
@@ -40,6 +41,7 @@ contract LoanManagerBaseTest is TestUtils {
     MockERC20             internal fundsAsset;
     MockGlobals           internal globals;
     MockLiquidatorFactory internal liquidatorFactory;
+    MockLoanFactory       internal loanFactory;
     MockPool              internal pool;
     MockPoolManager       internal poolManager;
 
@@ -51,10 +53,15 @@ contract LoanManagerBaseTest is TestUtils {
         fundsAsset        = new MockERC20("FundsAsset",      "FUN", 18);
         globals           = new MockGlobals(governor);
         liquidatorFactory = new MockLiquidatorFactory();
+        loanFactory       = new MockLoanFactory(); 
         poolManager       = new MockPoolManager();
         pool              = new MockPool();
 
         globals.setMapleTreasury(treasury);
+        globals.__setIsFactory(true);
+        globals.__setIsBorrower(true);
+
+        loanFactory.__setIsLoan(true);
 
         pool.__setAsset(address(fundsAsset));
         pool.__setManager(address(poolManager));
@@ -360,6 +367,8 @@ contract ClaimTests is LoanManagerClaimBaseTest {
 
         // Set next payment information for loanManager to use.
         MockLoan loan_ = MockLoan(loan);
+        loan_.__setFactory(address(loanFactory));
+        loan_.__setPaymentsRemaining(1);
         loan_.__setPrincipal(1_000_000);
         loan_.__setPrincipalRequested(1_000_000);
         loan_.__setNextPaymentInterest(100);
@@ -392,6 +401,8 @@ contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
 
         // Set next payment information for loanManager to use.
         MockLoan loan_ = MockLoan(loan);
+        loan_.__setFactory(address(loanFactory));
+        loan_.__setPaymentsRemaining(1);
         loan_.__setPrincipal(1_000_000);
         loan_.__setPrincipalRequested(1_000_000);
         loan_.__setNextPaymentInterest(100);
@@ -503,6 +514,8 @@ contract ImpairLoanTests is LoanManagerBaseTest {
 
         // Set next payment information for loanManager to use.
         MockLoan loan_ = MockLoan(loan);
+        loan_.__setFactory(address(loanFactory));
+        loan_.__setPaymentsRemaining(1);
         loan_.__setPrincipal(1_000_000);
         loan_.__setPrincipalRequested(1_000_000);
         loan_.__setNextPaymentInterest(100);
@@ -718,6 +731,8 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
 
         // Set next payment information for loanManager to use.
         MockLoan loan_ = MockLoan(loan);
+        loan_.__setFactory(address(loanFactory));
+        loan_.__setPaymentsRemaining(1);
         loan_.__setPrincipal(1_000_000);
         loan_.__setPrincipalRequested(1_000_000);
         loan_.__setNextPaymentInterest(100);
@@ -983,6 +998,8 @@ contract SingleLoanAtomicClaimTests is LoanManagerClaimBaseTest {
         loan = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Set next payment information for loanManager to use.
+        loan.__setFactory(address(loanFactory));
+        loan.__setPaymentsRemaining(1);
         loan.__setPrincipal(1_000_000);
         loan.__setPrincipalRequested(1_000_000);
         loan.__setNextPaymentInterest(100);
@@ -1455,6 +1472,10 @@ contract TwoLoanAtomicClaimTests is LoanManagerClaimBaseTest {
         loan2 = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Set next payment information for loanManager to use.
+        loan1.__setFactory(address(loanFactory));
+        loan2.__setFactory(address(loanFactory));
+        loan1.__setPaymentsRemaining(1);
+        loan2.__setPaymentsRemaining(1);
         loan1.__setPrincipal(1_000_000);
         loan2.__setPrincipal(1_000_000);
         loan1.__setPrincipalRequested(1_000_000);
@@ -2044,6 +2065,14 @@ contract ThreeLoanPastDomainEndClaimTests is LoanManagerClaimBaseTest {
         loan3 = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Set next payment information for loanManager to use.
+        loan1.__setFactory(address(loanFactory));
+        loan2.__setFactory(address(loanFactory));
+        loan3.__setFactory(address(loanFactory));
+
+        loan1.__setPaymentsRemaining(1);
+        loan2.__setPaymentsRemaining(1);
+        loan3.__setPaymentsRemaining(1);
+
         loan1.__setPrincipal(1_000_000);
         loan2.__setPrincipal(1_000_000);
         loan3.__setPrincipal(1_000_000);
@@ -2217,6 +2246,10 @@ contract ClaimDomainStartGtDomainEnd is LoanManagerClaimBaseTest {
         loan2 = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Set next payment information for loanManager to use.
+        loan1.__setFactory(address(loanFactory));
+        loan2.__setFactory(address(loanFactory));
+        loan1.__setPaymentsRemaining(1);
+        loan2.__setPaymentsRemaining(1);
         loan1.__setPrincipal(1_000_000);
         loan2.__setPrincipal(1_000_000);
         loan1.__setPrincipalRequested(1_000_000);
@@ -2433,6 +2466,8 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
         loan = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Setup next payment information
+        loan.__setFactory(address(loanFactory));
+        loan.__setPaymentsRemaining(1);
         loan.__setPrincipal(1_000_000);
         loan.__setPrincipalRequested(1_000_000);
         loan.__setNextPaymentInterest(125);
@@ -3119,6 +3154,8 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
 
         // Set next payment information for loanManager to use.
         MockLoan loan_ = MockLoan(loan);
+        loan_.__setFactory(address(loanFactory));
+        loan_.__setPaymentsRemaining(1);
         loan_.__setPrincipal(1_000_000);
         loan_.__setPrincipalRequested(1_000_000);
         loan_.__setNextPaymentInterest(100);
@@ -3412,6 +3449,8 @@ contract FundLoanTests is LoanManagerBaseTest {
         loan = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Set next payment information for loanManager to use.
+        loan.__setFactory(address(loanFactory));
+        loan.__setPaymentsRemaining(1);
         loan.__setPrincipalRequested(principalRequested);  // Simulate funding
         loan.__setNextPaymentInterest(paymentInterest);
         loan.__setNextPaymentPrincipal(paymentPrincipal);
@@ -3484,6 +3523,38 @@ contract FundLoanTests is LoanManagerBaseTest {
         vm.prank(notPoolDelegate);
         vm.expectRevert("LM:F:NOT_PD");
         loanManager.fund(address(loan), 1_000_000);
+    }
+
+    function test_fund_invalidFactory() public {
+        globals.__setIsFactory(false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:VL:INVALID_LOAN_FACTORY");
+        loanManager.fund(address(loan), 1);
+    }
+
+    function test_fund_invalidLoan() public {
+        loanFactory.__setIsLoan(false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:VL:INVALID_LOAN_INSTANCE");
+        loanManager.fund(address(loan), 1);
+    }
+
+    function test_fund_invalidBorrower() public {
+        globals.__setIsBorrower(false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:VL:INVALID_BORROWER");
+        loanManager.fund(address(loan), 1);
+    }
+
+    function test_fund_inactiveLoan() public {
+        loan.__setPaymentsRemaining(0);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:VL:LOAN_NOT_ACTIVE");
+        loanManager.fund(address(loan), 1);
     }
 
 }
@@ -4122,6 +4193,10 @@ contract UpdateAccountingTests is LoanManagerClaimBaseTest {
         loan2 = new MockLoan(address(collateralAsset), address(fundsAsset));
 
         // Set next payment information for loanManager to use.
+        loan1.__setFactory(address(loanFactory));
+        loan2.__setFactory(address(loanFactory));
+        loan1.__setPaymentsRemaining(1);
+        loan2.__setPaymentsRemaining(1);
         loan1.__setPrincipal(1_000_000);
         loan2.__setPrincipal(1_000_000);
         loan1.__setPrincipalRequested(1_000_000);

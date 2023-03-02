@@ -9,6 +9,7 @@ contract MockGlobals {
 
     bool internal _isFactory;
     bool internal _isValidScheduledCall;
+    bool internal _isBorrower;
 
     address public governor;
     address public mapleTreasury;
@@ -24,12 +25,20 @@ contract MockGlobals {
         governor = governor_;
     }
 
+    function isBorrower(address) external view returns (bool isBorrower_) {
+        isBorrower_ = _isBorrower;
+    }
+
     function isFactory(bytes32, address) external view returns (bool isFactory_) {
         isFactory_ = _isFactory;
     }
 
     function isValidScheduledCall(address, address, bytes32, bytes calldata) external view returns (bool isValid_) {
         isValid_ = _isValidScheduledCall;
+    }
+
+    function __setIsBorrower(bool isBorrower_) external {
+        _isBorrower = isBorrower_;
     }
 
     function __setIsFactory(bool isFactory_) external {
@@ -64,6 +73,7 @@ contract MockLoan {
 
     address public borrower;
     address public collateralAsset;
+    address public factory;
     address public fundsAsset;
 
     bool public isImpaired;
@@ -76,6 +86,7 @@ contract MockLoan {
     uint256 public nextPaymentPrincipal;
     uint256 public originalNextPaymentDueDate;
     uint256 public paymentInterval;
+    uint256 public paymentsRemaining;
     uint256 public platformServiceFee;
     uint256 public unimpairedPaymentDueDate;
     uint256 public principal;
@@ -165,8 +176,12 @@ contract MockLoan {
         collateral = collateral_;
     }
 
-      function __setCollateralAsset(address collateralAsset_) external {
+    function __setCollateralAsset(address collateralAsset_) external {
         collateralAsset = collateralAsset_;
+    }
+
+    function __setFactory(address factory_) external {
+        factory = factory_;
     }
 
     function __setNextPaymentDueDate(uint256 nextPaymentDueDate_) external {
@@ -187,6 +202,10 @@ contract MockLoan {
 
     function __setOriginalNextPaymentDueDate(uint256 originalNextPaymentDueDate_) external {
         originalNextPaymentDueDate = originalNextPaymentDueDate_;
+    }
+
+    function __setPaymentsRemaining(uint256 paymentsRemaining_) external {
+        paymentsRemaining = paymentsRemaining_;
     }
 
     function __setPlatformServiceFee(uint256 platformServiceFee_) external {
@@ -223,6 +242,20 @@ contract MockLoanManagerMigrator is LoanManagerStorage {
 
     fallback() external {
         fundsAsset = abi.decode(msg.data, (address));
+    }
+
+}
+
+contract MockLoanFactory { 
+
+    bool _isLoan;
+
+    function isLoan(address ) external view returns (bool isLoan_) {
+        isLoan_ = _isLoan;
+    }
+
+    function __setIsLoan(bool isLoan_) external {
+        _isLoan = isLoan_;
     }
 
 }
