@@ -96,12 +96,19 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
 
     /**
      *  @dev   Accepts new loan terms triggering a loan refinance.
-     *  @param loan_       Loan to be refinanced.
-     *  @param refinancer_ The address of the refinancer.
-     *  @param deadline_   The new deadline to execute the refinance.
-     *  @param calls_      The encoded calls to set new loan terms.
+     *  @param loan_              Loan to be refinanced.
+     *  @param refinancer_        The address of the refinancer.
+     *  @param deadline_          The new deadline to execute the refinance.
+     *  @param calls_             The encoded calls to set new loan terms.
+     *  @param principalIncrease_ The increase in principal.
      */
-    function acceptNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external;
+    function acceptNewTerms(
+        address loan_,
+        address refinancer_,
+        uint256 deadline_,
+        bytes[] calldata calls_,
+        uint256 principalIncrease_
+    ) external;
 
     /**
      *  @dev   Called by loans when payments are made, updating the accounting.

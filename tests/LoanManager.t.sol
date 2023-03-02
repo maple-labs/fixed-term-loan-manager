@@ -365,7 +365,7 @@ contract ClaimTests is LoanManagerClaimBaseTest {
         loan_.__setNextPaymentInterest(100);
         loan_.__setNextPaymentDueDate(START + 10_000);
 
-        vm.prank(address(poolDelegate));
+        vm.prank(poolDelegate);
         loanManager.fund(address(loan), 1_000_000);
     }
 
@@ -398,7 +398,7 @@ contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
         loan_.__setNextPaymentDueDate(START + 10_000);
         loan_.__setPlatformServiceFee(20);
 
-        vm.prank(address(poolDelegate));
+        vm.prank(poolDelegate);
         loanManager.fund(address(loan), 1_000_000);
     }
 
@@ -2524,8 +2524,8 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
         // Burn from the pool to simulate fund
         fundsAsset.burn(address(pool), 1_000_000);
 
-        vm.prank(address(poolManager));
-        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0));
+        vm.prank(poolDelegate);
+        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0), 0);
 
         _assertPaymentInfo({
             loan:                address(loan),
@@ -2688,8 +2688,8 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
 
         fundsAsset.burn(address(pool), 1_000_000);  // Burn from the pool to simulate fund and drawdown.
 
-        vm.prank(address(poolManager));
-        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0));
+        vm.prank(poolDelegate);
+        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0), 0);
 
         _assertPaymentInfo({
             loan:                address(loan),
@@ -2852,8 +2852,8 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
 
         fundsAsset.burn(address(pool), 1_000_000);
 
-        vm.prank(address(poolManager));
-        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0));
+        vm.prank(poolDelegate);
+        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0), 0);
 
         _assertPaymentInfo({
             loan:                address(loan),
@@ -3015,8 +3015,8 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
         loan.__setRefinanceNextPaymentInterest(375);
         loan.__setRefinanceNextPaymentDueDate(START + 20_000);
 
-        vm.prank(address(poolManager));
-        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0));
+        vm.prank(poolDelegate);
+        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0), 0);
 
         fundsAsset.burn(address(pool), 1_000_000);
 
@@ -3125,7 +3125,7 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
         loan_.__setNextPaymentDueDate(START + 10_000);
         loan_.__setPlatformServiceFee(20);
 
-        vm.prank(address(poolDelegate));
+        vm.prank(poolDelegate);
         loanManager.fund(address(loan), 1_000_000);
     }
 
@@ -3448,7 +3448,7 @@ contract FundLoanTests is LoanManagerBaseTest {
 
         fundsAsset.mint(address(loanManager), principalRequested);
 
-        vm.prank(address(poolDelegate));
+        vm.prank(poolDelegate);
         loanManager.fund(address(loan), principalRequested);
 
         assertEq(loanManager.paymentIdOf(address(loan)), 1);
@@ -3476,13 +3476,13 @@ contract FundLoanTests is LoanManagerBaseTest {
         assertEq(loanManager.domainStart(),       START);
     }
 
-    function test_fund_failIfNotPoolManager() external {
-        address notPoolManager = address(new Address());
+    function test_fund_failIfNotPoolDelegate() external {
+        address notPoolDelegate = address(new Address());
 
         fundsAsset.mint(address(loan), principalRequested);
 
-        vm.prank(notPoolManager);
-        vm.expectRevert("LM:F:NOT_PM");
+        vm.prank(notPoolDelegate);
+        vm.expectRevert("LM:F:NOT_PD");
         loanManager.fund(address(loan), 1_000_000);
     }
 

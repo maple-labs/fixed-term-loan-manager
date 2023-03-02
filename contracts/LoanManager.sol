@@ -143,8 +143,17 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /*** Loan Funding and Refinancing Functions                                                                                         ***/
     /**************************************************************************************************************************************/
 
-    function acceptNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external override nonReentrant {
-        require(msg.sender == poolManager, "LM:ANT:NOT_ADMIN");
+    function acceptNewTerms(
+        address loan_,
+        address refinancer_,
+        uint256 deadline_, bytes[]
+        calldata calls_,
+        uint256 principalIncrease_
+    )
+        external override nonReentrant
+    {
+        require(!IMapleGlobalsLike(globals()).protocolPaused(), "LM:ANT:PAUSED");
+        require(msg.sender == poolDelegate(),                   "LM:ANT:NOT_PD");
 
         _advanceGlobalPaymentAccounting();
 
@@ -156,6 +165,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         uint256 previousRate_      = _handlePreviousPaymentAccounting(loan_, block.timestamp <= paymentInfo_.paymentDueDate);
         uint256 previousPrincipal_ = IMapleLoanLike(loan_).principal();
+
+        if (principalIncrease_ > 0) IPoolManagerLike(poolManager).requestFunds(loan_, principalIncrease_);
 
         // Perform the refinancing, updating the loan state.
         IMapleLoanLike(loan_).acceptNewTerms(refinancer_, deadline_, calls_);
@@ -172,7 +183,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function fund(address loan_, uint256 principal_) external override nonReentrant {
-        require(msg.sender == poolDelegate(), "LM:F:NOT_PM");
+        require(msg.sender == poolDelegate(), "LM:F:NOT_PD");
 
         _advanceGlobalPaymentAccounting();
 
