@@ -53,7 +53,7 @@ contract LoanManagerBaseTest is TestUtils {
         fundsAsset        = new MockERC20("FundsAsset",      "FUN", 18);
         globals           = new MockGlobals(governor);
         liquidatorFactory = new MockLiquidatorFactory();
-        loanFactory       = new MockLoanFactory(); 
+        loanFactory       = new MockLoanFactory();
         poolManager       = new MockPoolManager();
         pool              = new MockPool();
 
@@ -375,7 +375,7 @@ contract ClaimTests is LoanManagerClaimBaseTest {
         loan_.__setNextPaymentDueDate(START + 10_000);
 
         vm.prank(poolDelegate);
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
     }
 
     function test_claim_notManager() external {
@@ -410,7 +410,7 @@ contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
         loan_.__setPlatformServiceFee(20);
 
         vm.prank(poolDelegate);
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
     }
 
     function test_finishCollateralLiquidation_notManager() public {
@@ -523,7 +523,7 @@ contract ImpairLoanTests is LoanManagerBaseTest {
         loan_.__setPlatformServiceFee(20);
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
     }
 
     function test_impairLoan_failIfPaused() external {
@@ -741,7 +741,7 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
         loan_.__setPlatformServiceFee(20);
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
     }
 
     function test_removeLoanImpairment_failIfPaused() external {
@@ -1006,7 +1006,7 @@ contract SingleLoanAtomicClaimTests is LoanManagerClaimBaseTest {
         loan.__setNextPaymentDueDate(START + 10_000);
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
 
         /**
          *  Loan 1
@@ -1488,9 +1488,9 @@ contract TwoLoanAtomicClaimTests is LoanManagerClaimBaseTest {
         fundsAsset.mint(address(loanManager), 2_000_000);
 
         vm.startPrank(address(poolDelegate));
-        loanManager.fund(address(loan1), 1_000_000);
+        loanManager.fund(address(loan1));
         vm.warp(START + 6_000);
-        loanManager.fund(address(loan2), 1_000_000);
+        loanManager.fund(address(loan2));
         vm.stopPrank();
 
         /**
@@ -2093,13 +2093,13 @@ contract ThreeLoanPastDomainEndClaimTests is LoanManagerClaimBaseTest {
 
         fundsAsset.mint(address(loanManager), 3_000_000);
 
-        loanManager.fund(address(loan1), 1_000_000);
+        loanManager.fund(address(loan1));
 
         vm.warp(START + 6_000);
-        loanManager.fund(address(loan2), 1_000_000);
+        loanManager.fund(address(loan2));
 
         vm.warp(START + 8_000);
-        loanManager.fund(address(loan3), 1_000_000);
+        loanManager.fund(address(loan3));
 
         vm.stopPrank();
 
@@ -2260,7 +2260,7 @@ contract ClaimDomainStartGtDomainEnd is LoanManagerClaimBaseTest {
         loan2.__setNextPaymentDueDate(START + 22_000);  // 10_000 second interval from 12_000sec start.
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan1), 1_000_000);
+        loanManager.fund(address(loan1));
 
         fundsAsset.mint(address(pool), 1_000_000);  // Represent totalAssets
 
@@ -2339,7 +2339,7 @@ contract ClaimDomainStartGtDomainEnd is LoanManagerClaimBaseTest {
         vm.warp(START + 12_000);
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan2), 1_000_000);
+        loanManager.fund(address(loan2));
 
         fundsAsset.burn(address(pool), 1_000_000);  // Mock pool moving cash
 
@@ -2474,7 +2474,7 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
         loan.__setNextPaymentDueDate(START + 10_000);
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
 
         // On this suite, pools have a total of 2_000_000 to facilitate funding + refinance
         fundsAsset.mint(address(pool), 1_000_000);
@@ -3163,7 +3163,7 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
         loan_.__setPlatformServiceFee(20);
 
         vm.prank(poolDelegate);
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
     }
 
     function test_triggerDefault_notManager() public {
@@ -3488,7 +3488,7 @@ contract FundLoanTests is LoanManagerBaseTest {
         fundsAsset.mint(address(loanManager), principalRequested);
 
         vm.prank(poolDelegate);
-        loanManager.fund(address(loan), principalRequested);
+        loanManager.fund(address(loan));
 
         assertEq(loanManager.paymentIdOf(address(loan)), 1);
 
@@ -3522,39 +3522,39 @@ contract FundLoanTests is LoanManagerBaseTest {
 
         vm.prank(notPoolDelegate);
         vm.expectRevert("LM:F:NOT_PD");
-        loanManager.fund(address(loan), 1_000_000);
+        loanManager.fund(address(loan));
     }
 
     function test_fund_invalidFactory() public {
         globals.__setIsFactory(false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:VL:INVALID_LOAN_FACTORY");
-        loanManager.fund(address(loan), 1);
+        vm.expectRevert("LM:F:INVALID_LOAN_FACTORY");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_invalidLoan() public {
         loanFactory.__setIsLoan(false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:VL:INVALID_LOAN_INSTANCE");
-        loanManager.fund(address(loan), 1);
+        vm.expectRevert("LM:F:INVALID_LOAN_INSTANCE");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_invalidBorrower() public {
         globals.__setIsBorrower(false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:VL:INVALID_BORROWER");
-        loanManager.fund(address(loan), 1);
+        vm.expectRevert("LM:F:INVALID_BORROWER");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_inactiveLoan() public {
         loan.__setPaymentsRemaining(0);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:VL:LOAN_NOT_ACTIVE");
-        loanManager.fund(address(loan), 1);
+        vm.expectRevert("LM:F:LOAN_NOT_ACTIVE");
+        loanManager.fund(address(loan));
     }
 
 }
@@ -4209,9 +4209,9 @@ contract UpdateAccountingTests is LoanManagerClaimBaseTest {
         fundsAsset.mint(address(loanManager), 2_000_000);
 
         vm.startPrank(address(poolDelegate));
-        loanManager.fund(address(loan1), 1_000_000);
+        loanManager.fund(address(loan1));
         vm.warp(START + 6_000);
-        loanManager.fund(address(loan2), 1_000_000);
+        loanManager.fund(address(loan2));
         vm.stopPrank();
 
         /**

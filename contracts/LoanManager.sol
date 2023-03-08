@@ -183,10 +183,18 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         _updateIssuanceParams(issuanceRate + newRate_ - previousRate_, accountedInterest);
     }
 
-    function fund(address loan_, uint256 principal_) external override nonReentrant {
+    function fund(address loan_) external override nonReentrant {
         require(msg.sender == poolDelegate(), "LM:F:NOT_PD");
 
-        _validateLoan(loan_);
+        address factory_ = IMapleLoanLike(loan_).factory();
+        address globals_ = globals();
+
+        require(IMapleGlobalsLike(globals_).isFactory("FT_LOAN", factory_),               "LM:F:INVALID_LOAN_FACTORY");
+        require(ILoanFactoryLike(factory_).isLoan(loan_),                                 "LM:F:INVALID_LOAN_INSTANCE");
+        require(IMapleGlobalsLike(globals_).isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INVALID_BORROWER");
+        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,                           "LM:F:LOAN_NOT_ACTIVE");
+
+        uint256 principal_ = IMapleLoanLike(loan_).principal();
 
         _advanceGlobalPaymentAccounting();
 
@@ -800,16 +808,6 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
             issuanceRate      = issuanceRate_,
             accountedInterest = accountedInterest_
         );
-    }
-
-    function _validateLoan(address loan_) internal view {
-        address factory_ = IMapleLoanLike(loan_).factory();
-        address globals_ = globals();
-
-        require(IMapleGlobalsLike(globals()).isFactory("FT_LOAN", factory_),              "LM:VL:INVALID_LOAN_FACTORY");
-        require(ILoanFactoryLike(factory_).isLoan(loan_),                                 "LM:VL:INVALID_LOAN_INSTANCE");
-        require(IMapleGlobalsLike(globals_).isBorrower(IMapleLoanLike(loan_).borrower()), "LM:VL:INVALID_BORROWER");
-        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,                           "LM:VL:LOAN_NOT_ACTIVE");
     }
 
     /**************************************************************************************************************************************/

@@ -229,7 +229,7 @@ contract SingleLoanClaimTests is LoanManagerClaimBaseTest {
 
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan), principal);
+        loanManager.fund(address(loan));
 
         vm.warp(START + paymentInterval + lateInterval);
 
