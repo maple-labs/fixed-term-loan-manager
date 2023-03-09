@@ -3458,8 +3458,6 @@ contract FundLoanTests is LoanManagerBaseTest {
     }
 
     function test_fund() external {
-        fundsAsset.mint(address(loan), principalRequested);
-
         (
             uint256 incomingNetInterest_,
             uint256 refinanceInterest_,
@@ -3484,8 +3482,6 @@ contract FundLoanTests is LoanManagerBaseTest {
         assertEq(loanManager.domainStart(),       0);
 
         loan.__setPrincipal(principalRequested);  // Simulate intermediate state from funding
-
-        fundsAsset.mint(address(loanManager), principalRequested);
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
@@ -3517,8 +3513,6 @@ contract FundLoanTests is LoanManagerBaseTest {
 
     function test_fund_failIfNotPoolDelegate() external {
         address notPoolDelegate = address(new Address());
-
-        fundsAsset.mint(address(loan), principalRequested);
 
         vm.prank(notPoolDelegate);
         vm.expectRevert("LM:F:NOT_PD");

@@ -81,6 +81,8 @@ interface IMapleLoanLike {
 
     function principal() external view returns (uint256 principal_);
 
+    function principalRequested() external view returns (uint256 principal_);
+
     function removeLoanImpairment() external;
 
     function repossess(address destination_) external returns (uint256 collateralRepossessed_, uint256 fundsRepossessed_);

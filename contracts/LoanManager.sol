@@ -194,7 +194,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         require(IMapleGlobalsLike(globals_).isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INVALID_BORROWER");
         require(IMapleLoanLike(loan_).paymentsRemaining() != 0,                           "LM:F:LOAN_NOT_ACTIVE");
 
-        uint256 principal_ = IMapleLoanLike(loan_).principal();
+        uint256 principal_ = IMapleLoanLike(loan_).principalRequested();
 
         _advanceGlobalPaymentAccounting();
 
