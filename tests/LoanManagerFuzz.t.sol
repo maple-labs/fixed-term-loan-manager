@@ -11,7 +11,6 @@ import {
     MockGlobals,
     MockLoan,
     MockLoanFactory,
-    MockPool,
     MockPoolManager
 } from "./mocks/Mocks.sol";
 
@@ -26,7 +25,9 @@ contract LoanManagerBaseTest is TestUtils {
     uint256 internal constant START = 5_000_000;
 
     address internal governor     = address(new Address());
+    address internal pool         = address(new Address());
     address internal poolDelegate = address(new Address());
+    address internal poolDeployer = address(new Address());
     address internal treasury     = address(new Address());
 
     address internal implementation = address(new LoanManagerHarness());
@@ -39,7 +40,6 @@ contract LoanManagerBaseTest is TestUtils {
     MockERC20       internal fundsAsset;
     MockGlobals     internal globals;
     MockLoanFactory internal loanFactory;
-    MockPool        internal pool;
     MockPoolManager internal poolManager;
 
     LoanManagerFactory internal factory;
@@ -51,7 +51,6 @@ contract LoanManagerBaseTest is TestUtils {
         globals         = new MockGlobals(governor);
         loanFactory     = new MockLoanFactory();
         poolManager     = new MockPoolManager();
-        pool            = new MockPool();
 
         globals.setMapleTreasury(treasury);
         globals.__setIsFactory(true);
@@ -59,9 +58,8 @@ contract LoanManagerBaseTest is TestUtils {
 
         loanFactory.__setIsLoan(true);
 
-        pool.__setAsset(address(fundsAsset));
-        pool.__setManager(address(poolManager));
-
+        poolManager.__setAsset(address(fundsAsset));
+        poolManager.__setPool(pool);
         poolManager.__setPoolDelegate(poolDelegate);
 
         vm.startPrank(governor);
@@ -70,11 +68,13 @@ contract LoanManagerBaseTest is TestUtils {
         factory.setDefaultVersion(1);
         vm.stopPrank();
 
-        globals.setValidPoolDeployer(address(this), true);
+        globals.setValidPoolDeployer(poolDeployer, true);
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
 
-        bytes memory arguments = LoanManagerInitializer(initializer).encodeArguments(address(pool));
+        bytes memory arguments = LoanManagerInitializer(initializer).encodeArguments(address(poolManager));
+
+        vm.prank(poolDeployer);
         loanManager = LoanManagerHarness(LoanManagerFactory(factory).createInstance(arguments, ""));
 
         vm.warp(START);

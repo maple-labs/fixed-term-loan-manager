@@ -13,7 +13,6 @@ import {
     MockLoan,
     MockLoanFactory,
     MockLoanManagerMigrator,
-    MockPool,
     MockPoolManager
 } from "./mocks/Mocks.sol";
 
@@ -28,6 +27,7 @@ contract LoanManagerBaseTest is TestUtils {
     uint256 constant internal START = 5_000_000;
 
     address internal governor     = address(new Address());
+    address internal pool         = address(new Address());
     address internal poolDelegate = address(new Address());
     address internal treasury     = address(new Address());
 
@@ -42,7 +42,6 @@ contract LoanManagerBaseTest is TestUtils {
     MockGlobals           internal globals;
     MockLiquidatorFactory internal liquidatorFactory;
     MockLoanFactory       internal loanFactory;
-    MockPool              internal pool;
     MockPoolManager       internal poolManager;
 
     LoanManagerFactory internal factory;
@@ -55,7 +54,6 @@ contract LoanManagerBaseTest is TestUtils {
         liquidatorFactory = new MockLiquidatorFactory();
         loanFactory       = new MockLoanFactory();
         poolManager       = new MockPoolManager();
-        pool              = new MockPool();
 
         globals.setMapleTreasury(treasury);
         globals.__setIsFactory(true);
@@ -63,9 +61,8 @@ contract LoanManagerBaseTest is TestUtils {
 
         loanFactory.__setIsLoan(true);
 
-        pool.__setAsset(address(fundsAsset));
-        pool.__setManager(address(poolManager));
-
+        poolManager.__setAsset(address(fundsAsset));
+        poolManager.__setPool(pool);
         poolManager.__setPoolDelegate(poolDelegate);
 
         vm.startPrank(governor);
@@ -78,7 +75,7 @@ contract LoanManagerBaseTest is TestUtils {
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
 
-        bytes memory arguments = LoanManagerInitializer(initializer).encodeArguments(address(pool));
+        bytes memory arguments = LoanManagerInitializer(initializer).encodeArguments(address(poolManager));
         loanManager = LoanManagerHarness(LoanManagerFactory(factory).createInstance(arguments, ""));
 
         vm.warp(START);
@@ -455,7 +452,7 @@ contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
 
         ILoanManagerStructs.LiquidationInfo memory liquidationInfo = ILoanManagerStructs(address(loanManager)).liquidationInfo(loan);
 
-        address liquidator = address(0x61a0009C8E5f6e87CAf2D3B57081c27882a0187e);
+        address liquidator = address(0xDDA0a8D7486686d36449792617565E6C474fBa3f);  // NOTE: Will change if contract(s) change.
 
         _assertLiquidationInfo({
             liquidationInfo: liquidationInfo,
@@ -3293,7 +3290,7 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
             interest:        48,
             lateInterest:    0,
             platformFees:    20 + 3,
-            liquidator:      address(0x61a0009C8E5f6e87CAf2D3B57081c27882a0187e)
+            liquidator:      address(0xDDA0a8D7486686d36449792617565E6C474fBa3f)  // NOTE: Will change if contract(s) change.
         });
     }
 
@@ -3383,7 +3380,7 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
             interest:        80,
             lateInterest:    8,
             platformFees:    25,
-            liquidator:      address(0x61a0009C8E5f6e87CAf2D3B57081c27882a0187e)
+            liquidator:      address(0xDDA0a8D7486686d36449792617565E6C474fBa3f)  // NOTE: Will change if contract(s) change.
         });
     }
 

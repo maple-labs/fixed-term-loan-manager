@@ -246,9 +246,9 @@ contract MockLoanManagerMigrator is LoanManagerStorage {
 
 }
 
-contract MockLoanFactory { 
+contract MockLoanFactory {
 
-    bool _isLoan;
+    bool internal _isLoan;
 
     function isLoan(address ) external view returns (bool isLoan_) {
         isLoan_ = _isLoan;
@@ -260,32 +260,14 @@ contract MockLoanFactory {
 
 }
 
-contract MockPool {
-
-    address public asset;
-    address public manager;
-
-    function __setAsset(address asset_) external {
-        asset = asset_;
-    }
-
-    function __setManager(address manager_) external {
-        manager = manager_;
-    }
-
-}
-
 contract MockPoolManager {
 
-    address _factory;
-
+    address public asset;
+    address public factory;
+    address public pool;
     address public poolDelegate;
 
     uint256 public delegateManagementFeeRate;
-
-    function factory() external view returns (address factory_) {
-        factory_ = _factory;
-    }
 
     function hasSufficientCover() external pure returns (bool hasSufficientCover_) {
         hasSufficientCover_ = true;
@@ -295,10 +277,18 @@ contract MockPoolManager {
         delegateManagementFeeRate = delegateManagementFeeRate_;
     }
 
-    function requestFunds(address destination_, uint256 principal_) external { }
+    function requestFunds(address destination_, uint256 principal_) external {}
+
+    function __setAsset(address asset_) external {
+        asset = asset_;
+    }
 
     function __setFactory(address factory_) external {
-        _factory = factory_;
+        factory = factory_;
+    }
+
+    function __setPool(address pool_) external {
+        pool = pool_;
     }
 
     function __setPoolDelegate(address poolDelegate_) external {
@@ -327,7 +317,7 @@ contract MockLiquidatorFactory {
 
 contract MockFactory {
 
-    bool _isInstance;
+    bool internal _isInstance;
 
     function isInstance(address) external view returns (bool isInstance_) {
         isInstance_ = _isInstance;

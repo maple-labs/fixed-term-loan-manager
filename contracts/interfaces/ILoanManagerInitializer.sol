@@ -3,10 +3,10 @@ pragma solidity 0.8.7;
 
 interface ILoanManagerInitializer {
 
-    event Initialized(address indexed pool_);
+    event Initialized(address indexed poolManager_);
 
-    function decodeArguments(bytes calldata calldata_) external pure returns (address pool_);
+    function decodeArguments(bytes calldata calldata_) external pure returns (address poolManager_);
 
-    function encodeArguments(address pool_) external pure returns (bytes memory calldata_);
+    function encodeArguments(address poolManager_) external pure returns (bytes memory calldata_);
 
 }

@@ -93,21 +93,17 @@ interface IMapleLoanLike {
 
 }
 
-interface IPoolLike is IERC20Like {
+interface IPoolManagerLike {
 
     function asset() external view returns (address asset_);
-
-    function manager() external view returns (address manager_);
-
-}
-
-interface IPoolManagerLike {
 
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate_);
 
     function factory() external view returns (address factory_);
 
     function hasSufficientCover() external view returns (bool hasSufficientCover_);
+
+    function pool() external view returns (address pool_);
 
     function poolDelegate() external view returns (address poolDelegate_);
 
