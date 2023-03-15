@@ -4321,7 +4321,7 @@ contract UpdateAccountingTests is LoanManagerClaimBaseTest {
 
 }
 
-contract SetterTests is LoanManagerBaseTest {
+contract GetterTests is LoanManagerBaseTest {
 
     function setUp() public override {
         super.setUp();
