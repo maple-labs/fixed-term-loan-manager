@@ -20,7 +20,7 @@ import { ILoanManagerStructs } from "./interfaces/ILoanManagerStructs.sol";
 
 import { LoanManagerHarness } from "./harnesses/LoanManagerHarness.sol";
 
-contract LoanManagerBaseTest is TestUtils {
+contract TestBase is TestUtils {
 
     uint256 constant START = 5_000_000;
 
@@ -96,7 +96,7 @@ contract LoanManagerBaseTest is TestUtils {
     }
 }
 
-contract LoanManagerClaimBaseTest is LoanManagerBaseTest {
+contract ClaimTestBase is TestBase {
 
     function _assertBalances(uint256 poolBalance, uint256 treasuryBalance, uint256 poolDelegateBalance) internal {
         assertEq(fundsAsset.balanceOf(address(pool)),         poolBalance);
@@ -202,7 +202,7 @@ contract LoanManagerClaimBaseTest is LoanManagerBaseTest {
 
 }
 
-contract SingleLoanClaimTests is LoanManagerClaimBaseTest {
+contract SingleLoanClaimTests is ClaimTestBase {
 
     function testFuzz_claim_latePayment_interestOnly(
         uint256 principal,

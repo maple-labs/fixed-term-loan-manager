@@ -22,7 +22,7 @@ contract CreateInstanceTests is Test {
     MockPoolManager poolManager;
     MockFactory     poolManagerFactory;
 
-    LoanManagerFactory internal factory;
+    LoanManagerFactory factory;
 
     function setUp() public virtual {
         governor       = makeAddr("governor");

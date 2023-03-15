@@ -22,7 +22,7 @@ import { ILoanManagerStructs } from "./interfaces/ILoanManagerStructs.sol";
 
 import { LoanManagerHarness } from "./harnesses/LoanManagerHarness.sol";
 
-contract LoanManagerBaseTest is TestUtils {
+contract TestBase is TestUtils {
 
     uint256 constant START = 5_000_000;
 
@@ -98,7 +98,7 @@ contract LoanManagerBaseTest is TestUtils {
     }
 }
 
-contract MigrateTests is LoanManagerBaseTest {
+contract MigrateTests is TestBase {
 
     address migrator = address(new MockLoanManagerMigrator());
 
@@ -124,7 +124,7 @@ contract MigrateTests is LoanManagerBaseTest {
 
 }
 
-contract SetImplementationTests is LoanManagerBaseTest {
+contract SetImplementationTests is TestBase {
 
     address newImplementation = address(new LoanManagerHarness());
 
@@ -144,7 +144,7 @@ contract SetImplementationTests is LoanManagerBaseTest {
 
 }
 
-contract UpgradeTests is LoanManagerBaseTest {
+contract UpgradeTests is TestBase {
 
     address newImplementation = address(new LoanManagerHarness());
 
@@ -193,7 +193,7 @@ contract UpgradeTests is LoanManagerBaseTest {
 
 }
 
-contract SetAllowedSlippage_SetterTests is LoanManagerBaseTest {
+contract SetAllowedSlippage_SetterTests is TestBase {
 
     function test_setAllowedSlippage_paused() external {
         globals.__setProtocolPaused(true);
@@ -229,7 +229,7 @@ contract SetAllowedSlippage_SetterTests is LoanManagerBaseTest {
 
 }
 
-contract SetMinRatio_SetterTests is LoanManagerBaseTest {
+contract SetMinRatio_SetterTests is TestBase {
 
     function test_setMinRatio_paused() external {
         globals.__setProtocolPaused(true);
@@ -259,7 +259,7 @@ contract SetMinRatio_SetterTests is LoanManagerBaseTest {
 
 }
 
-contract LoanManagerClaimBaseTest is LoanManagerBaseTest {
+contract ClaimTestBase is TestBase {
 
     function _assertBalances(uint256 poolBalance, uint256 treasuryBalance, uint256 poolDelegateBalance) internal {
         assertEq(fundsAsset.balanceOf(address(pool)),         poolBalance);
@@ -368,7 +368,7 @@ contract LoanManagerClaimBaseTest is LoanManagerBaseTest {
 
 }
 
-contract ClaimTests is LoanManagerClaimBaseTest {
+contract ClaimTests is ClaimTestBase {
 
     address loan;
 
@@ -401,7 +401,7 @@ contract ClaimTests is LoanManagerClaimBaseTest {
     }
 }
 
-contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
+contract FinishCollateralLiquidationTests is TestBase {
 
     address auctioneer;
     address loan;
@@ -516,7 +516,7 @@ contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
 
 }
 
-contract ImpairLoanTests is LoanManagerBaseTest {
+contract ImpairLoanTests is TestBase {
     address loan;
 
     function setUp() public override {
@@ -732,7 +732,7 @@ contract ImpairLoanTests is LoanManagerBaseTest {
 
 }
 
-contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
+contract RemoveLoanImpairmentTests is TestBase {
 
     address loan;
 
@@ -1000,7 +1000,7 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
 
 }
 
-contract SingleLoanAtomicClaimTests is LoanManagerClaimBaseTest {
+contract SingleLoanAtomicClaimTests is ClaimTestBase {
 
     MockLoan loan;
 
@@ -1472,7 +1472,7 @@ contract SingleLoanAtomicClaimTests is LoanManagerClaimBaseTest {
 
 }
 
-contract TwoLoanAtomicClaimTests is LoanManagerClaimBaseTest {
+contract TwoLoanAtomicClaimTests is ClaimTestBase {
 
     MockLoan loan1;
     MockLoan loan2;
@@ -2063,7 +2063,7 @@ contract TwoLoanAtomicClaimTests is LoanManagerClaimBaseTest {
 
 }
 
-contract ThreeLoanPastDomainEndClaimTests is LoanManagerClaimBaseTest {
+contract ThreeLoanPastDomainEndClaimTests is ClaimTestBase {
 
     MockLoan loan1;
     MockLoan loan2;
@@ -2246,7 +2246,7 @@ contract ThreeLoanPastDomainEndClaimTests is LoanManagerClaimBaseTest {
 
 }
 
-contract ClaimDomainStartGtDomainEnd is LoanManagerClaimBaseTest {
+contract ClaimDomainStartGtDomainEnd is ClaimTestBase {
 
     MockLoan loan1;
     MockLoan loan2;
@@ -2465,7 +2465,7 @@ contract ClaimDomainStartGtDomainEnd is LoanManagerClaimBaseTest {
     }
 }
 
-contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
+contract RefinanceAccountingSingleLoanTests is ClaimTestBase {
 
     MockLoan loan;
 
@@ -3155,7 +3155,7 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
 
 }
 
-contract TriggerDefaultTests is LoanManagerBaseTest {
+contract TriggerDefaultTests is TestBase {
 
     address loan;
 
@@ -3446,7 +3446,7 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
 
 }
 
-contract FundLoanTests is LoanManagerBaseTest {
+contract FundLoanTests is TestBase {
 
     uint256 principalRequested = 1_000_000e18;
     uint256 paymentInterest    = 1e18;
@@ -3566,7 +3566,7 @@ contract FundLoanTests is LoanManagerBaseTest {
 
 }
 
-contract LoanManagerSortingTests is LoanManagerBaseTest {
+contract LoanManagerSortingTests is TestBase {
 
     address earliestLoan;
     address latestLoan;
@@ -4056,7 +4056,7 @@ contract LoanManagerSortingTests is LoanManagerBaseTest {
 
 }
 
-contract QueueNextPaymentTests is LoanManagerBaseTest {
+contract QueueNextPaymentTests is TestBase {
 
     uint256 principalRequested = 1_000_000e18;
     uint256 paymentInterest    = 1e18;
@@ -4111,7 +4111,7 @@ contract QueueNextPaymentTests is LoanManagerBaseTest {
 
 }
 
-contract UintCastingTests is LoanManagerBaseTest {
+contract UintCastingTests is TestBase {
 
     function test_castUint24() external {
         vm.expectRevert("LM:UINT24");
@@ -4168,7 +4168,7 @@ contract UintCastingTests is LoanManagerBaseTest {
     }
 }
 
-contract UpdateAccountingFailureTests is LoanManagerBaseTest {
+contract UpdateAccountingFailureTests is TestBase {
 
     function test_updateAccounting_notPoolDelegate() external {
         vm.expectRevert("LM:UA:NO_AUTH");
@@ -4188,7 +4188,7 @@ contract UpdateAccountingFailureTests is LoanManagerBaseTest {
 
 }
 
-contract UpdateAccountingTests is LoanManagerClaimBaseTest {
+contract UpdateAccountingTests is ClaimTestBase {
 
     MockLoan loan1;
     MockLoan loan2;
@@ -4334,7 +4334,7 @@ contract UpdateAccountingTests is LoanManagerClaimBaseTest {
 
 }
 
-contract GetterTests is LoanManagerBaseTest {
+contract GetterTests is TestBase {
 
     function setUp() public override {
         super.setUp();
@@ -4394,7 +4394,7 @@ contract GetterTests is LoanManagerBaseTest {
 
 }
 
-contract DisburseLiquidationFundsTests is LoanManagerBaseTest {
+contract DisburseLiquidationFundsTests is TestBase {
 
     function test_disburseLiquidationFunds_mapleTreasuryNotSet() external {
         globals.setMapleTreasury(address(0));
@@ -4409,7 +4409,7 @@ contract DisburseLiquidationFundsTests is LoanManagerBaseTest {
 
 }
 
-contract DistributeClaimedFunds is LoanManagerBaseTest {
+contract DistributeClaimedFunds is TestBase {
 
     function test_distributeClaimedFunds_mapleTreasuryNotSet() external {
         globals.setMapleTreasury(address(0));
