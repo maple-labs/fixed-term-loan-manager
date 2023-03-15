@@ -24,28 +24,29 @@ import { LoanManagerHarness } from "./harnesses/LoanManagerHarness.sol";
 
 contract LoanManagerBaseTest is TestUtils {
 
-    uint256 constant internal START = 5_000_000;
+    uint256 constant START = 5_000_000;
 
-    address internal governor     = address(new Address());
-    address internal pool         = address(new Address());
-    address internal poolDelegate = address(new Address());
-    address internal treasury     = address(new Address());
+    address borrower     = address(new Address());
+    address governor     = address(new Address());
+    address pool         = address(new Address());
+    address poolDelegate = address(new Address());
+    address treasury     = address(new Address());
 
-    address internal implementation = address(new LoanManagerHarness());
-    address internal initializer    = address(new LoanManagerInitializer());
+    address implementation = address(new LoanManagerHarness());
+    address initializer    = address(new LoanManagerInitializer());
 
-    uint256 internal delegateManagementFeeRate = 15_0000;
-    uint256 internal platformManagementFeeRate = 5_0000;
+    uint256 delegateManagementFeeRate = 15_0000;
+    uint256 platformManagementFeeRate = 5_0000;
 
-    MockERC20             internal collateralAsset;
-    MockERC20             internal fundsAsset;
-    MockGlobals           internal globals;
-    MockLiquidatorFactory internal liquidatorFactory;
-    MockLoanFactory       internal loanFactory;
-    MockPoolManager       internal poolManager;
+    MockERC20             collateralAsset;
+    MockERC20             fundsAsset;
+    MockGlobals           globals;
+    MockLiquidatorFactory liquidatorFactory;
+    MockLoanFactory       loanFactory;
+    MockPoolManager       poolManager;
 
-    LoanManagerFactory internal factory;
-    LoanManagerHarness internal loanManager;
+    LoanManagerFactory factory;
+    LoanManagerHarness loanManager;
 
     function setUp() public virtual {
         collateralAsset   = new MockERC20("CollateralAsset", "COL", 18);
@@ -99,7 +100,7 @@ contract LoanManagerBaseTest is TestUtils {
 
 contract MigrateTests is LoanManagerBaseTest {
 
-    address internal migrator = address(new MockLoanManagerMigrator());
+    address migrator = address(new MockLoanManagerMigrator());
 
     function test_migrate_notFactory() external {
         vm.expectRevert("LM:M:NOT_FACTORY");
@@ -125,7 +126,7 @@ contract MigrateTests is LoanManagerBaseTest {
 
 contract SetImplementationTests is LoanManagerBaseTest {
 
-    address internal newImplementation = address(new LoanManagerHarness());
+    address newImplementation = address(new LoanManagerHarness());
 
     function test_setImplementation_notFactory() external {
         vm.expectRevert("LM:SI:NOT_FACTORY");
@@ -145,7 +146,7 @@ contract SetImplementationTests is LoanManagerBaseTest {
 
 contract UpgradeTests is LoanManagerBaseTest {
 
-    address internal newImplementation = address(new LoanManagerHarness());
+    address newImplementation = address(new LoanManagerHarness());
 
     function setUp() public override {
         super.setUp();
@@ -197,7 +198,7 @@ contract SetAllowedSlippage_SetterTests is LoanManagerBaseTest {
     function test_setAllowedSlippage_paused() external {
         globals.__setProtocolPaused(true);
 
-        vm.expectRevert("LM:SAS:PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.setAllowedSlippage(address(collateralAsset), 0);
     }
 
@@ -233,7 +234,7 @@ contract SetMinRatio_SetterTests is LoanManagerBaseTest {
     function test_setMinRatio_paused() external {
         globals.__setProtocolPaused(true);
 
-        vm.expectRevert("LM:SMR:PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.setMinRatio(address(collateralAsset), 0);
     }
 
@@ -369,7 +370,7 @@ contract LoanManagerClaimBaseTest is LoanManagerBaseTest {
 
 contract ClaimTests is LoanManagerClaimBaseTest {
 
-    address internal loan;
+    address loan;
 
     function setUp() public override {
         super.setUp();
@@ -389,10 +390,10 @@ contract ClaimTests is LoanManagerClaimBaseTest {
         loanManager.fund(address(loan));
     }
 
-    function test_claim_notManager() external {
+    function test_claim_notLoan() external {
         fundsAsset.mint(address(loanManager), 100);
 
-        vm.expectRevert("LM:C:NOT_LOAN");
+        vm.expectRevert("LM:DCF:NOT_LOAN");
         loanManager.claim(0, 100, 0, START + 10_000);
 
         vm.prank(address(loan));
@@ -402,8 +403,8 @@ contract ClaimTests is LoanManagerClaimBaseTest {
 
 contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
 
-    address internal auctioneer;
-    address internal loan;
+    address auctioneer;
+    address loan;
 
     function setUp() public override {
         super.setUp();
@@ -466,7 +467,7 @@ contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
 
         ILoanManagerStructs.LiquidationInfo memory liquidationInfo = ILoanManagerStructs(address(loanManager)).liquidationInfo(loan);
 
-        address liquidator = address(0xDDA0a8D7486686d36449792617565E6C474fBa3f);  // NOTE: Will change if contract(s) change.
+        address liquidator = address(0xe8a41C57AB0019c403D35e8D54f2921BaE21Ed66);  // NOTE: Will change if contract(s) change.
 
         _assertLiquidationInfo({
             liquidationInfo: liquidationInfo,
@@ -516,7 +517,7 @@ contract FinishCollateralLiquidationTests is LoanManagerBaseTest {
 }
 
 contract ImpairLoanTests is LoanManagerBaseTest {
-    address internal loan;
+    address loan;
 
     function setUp() public override {
         super.setUp();
@@ -541,7 +542,7 @@ contract ImpairLoanTests is LoanManagerBaseTest {
         globals.__setProtocolPaused(true);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:IL:PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.impairLoan(loan);
     }
 
@@ -733,7 +734,7 @@ contract ImpairLoanTests is LoanManagerBaseTest {
 
 contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
 
-    address internal loan;
+    address loan;
 
     function setUp() public override {
         super.setUp();
@@ -759,7 +760,7 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
         globals.__setProtocolPaused(true);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:RLI:PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.removeLoanImpairment(loan);
     }
 
@@ -1001,7 +1002,7 @@ contract RemoveLoanImpairmentTests is LoanManagerBaseTest {
 
 contract SingleLoanAtomicClaimTests is LoanManagerClaimBaseTest {
 
-    MockLoan internal loan;
+    MockLoan loan;
 
     function setUp() public override {
         super.setUp();
@@ -1473,8 +1474,8 @@ contract SingleLoanAtomicClaimTests is LoanManagerClaimBaseTest {
 
 contract TwoLoanAtomicClaimTests is LoanManagerClaimBaseTest {
 
-    MockLoan internal loan1;
-    MockLoan internal loan2;
+    MockLoan loan1;
+    MockLoan loan2;
 
     function setUp() public override {
         super.setUp();
@@ -2064,9 +2065,9 @@ contract TwoLoanAtomicClaimTests is LoanManagerClaimBaseTest {
 
 contract ThreeLoanPastDomainEndClaimTests is LoanManagerClaimBaseTest {
 
-    MockLoan internal loan1;
-    MockLoan internal loan2;
-    MockLoan internal loan3;
+    MockLoan loan1;
+    MockLoan loan2;
+    MockLoan loan3;
 
     function setUp() public override {
         super.setUp();
@@ -2247,8 +2248,8 @@ contract ThreeLoanPastDomainEndClaimTests is LoanManagerClaimBaseTest {
 
 contract ClaimDomainStartGtDomainEnd is LoanManagerClaimBaseTest {
 
-    MockLoan internal loan1;
-    MockLoan internal loan2;
+    MockLoan loan1;
+    MockLoan loan2;
 
     function setUp() public override {
         super.setUp();
@@ -2466,10 +2467,10 @@ contract ClaimDomainStartGtDomainEnd is LoanManagerClaimBaseTest {
 
 contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
 
-    MockLoan internal loan;
+    MockLoan loan;
 
     // Refinance
-    address internal refinancer = address(new Address());
+    address refinancer = address(new Address());
 
     function setUp() public override {
         super.setUp();
@@ -3156,7 +3157,7 @@ contract RefinanceAccountingSingleLoanTests is LoanManagerClaimBaseTest {
 
 contract TriggerDefaultTests is LoanManagerBaseTest {
 
-    address internal loan;
+    address loan;
 
     function setUp() public override {
         super.setUp();
@@ -3304,7 +3305,7 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
             interest:        48,
             lateInterest:    0,
             platformFees:    20 + 3,
-            liquidator:      address(0xDDA0a8D7486686d36449792617565E6C474fBa3f)  // NOTE: Will change if contract(s) change.
+            liquidator:      address(0xe8a41C57AB0019c403D35e8D54f2921BaE21Ed66)  // NOTE: Will change if contract(s) change.
         });
     }
 
@@ -3394,11 +3395,12 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
             interest:        80,
             lateInterest:    8,
             platformFees:    25,
-            liquidator:      address(0xDDA0a8D7486686d36449792617565E6C474fBa3f)  // NOTE: Will change if contract(s) change.
+            liquidator:      address(0xe8a41C57AB0019c403D35e8D54f2921BaE21Ed66)  // NOTE: Will change if contract(s) change.
         });
     }
 
     function test_triggerDefault_success_withCollateralAssetEqualToFundsAsset() public {
+        MockLoan(loan).__setBorrower(borrower);
         MockLoan(loan).__setCollateralAsset(address(fundsAsset));
         MockLoan(loan).__setCollateral(100_000);
 
@@ -3446,11 +3448,11 @@ contract TriggerDefaultTests is LoanManagerBaseTest {
 
 contract FundLoanTests is LoanManagerBaseTest {
 
-    uint256 internal principalRequested = 1_000_000e18;
-    uint256 internal paymentInterest    = 1e18;
-    uint256 internal paymentPrincipal   = 0;
+    uint256 principalRequested = 1_000_000e18;
+    uint256 paymentInterest    = 1e18;
+    uint256 paymentPrincipal   = 0;
 
-    MockLoan internal loan;
+    MockLoan loan;
 
     function setUp() public override {
         super.setUp();
@@ -3566,15 +3568,15 @@ contract FundLoanTests is LoanManagerBaseTest {
 
 contract LoanManagerSortingTests is LoanManagerBaseTest {
 
-    address internal earliestLoan;
-    address internal latestLoan;
-    address internal medianLoan;
-    address internal synchronizedLoan;
+    address earliestLoan;
+    address latestLoan;
+    address medianLoan;
+    address synchronizedLoan;
 
-    LoanManagerHarness.PaymentInfo internal earliestPaymentInfo;
-    LoanManagerHarness.PaymentInfo internal latestPaymentInfo;
-    LoanManagerHarness.PaymentInfo internal medianPaymentInfo;
-    LoanManagerHarness.PaymentInfo internal synchronizedPaymentInfo;
+    LoanManagerHarness.PaymentInfo earliestPaymentInfo;
+    LoanManagerHarness.PaymentInfo latestPaymentInfo;
+    LoanManagerHarness.PaymentInfo medianPaymentInfo;
+    LoanManagerHarness.PaymentInfo synchronizedPaymentInfo;
 
     function setUp() public override {
         super.setUp();
@@ -4056,11 +4058,11 @@ contract LoanManagerSortingTests is LoanManagerBaseTest {
 
 contract QueueNextPaymentTests is LoanManagerBaseTest {
 
-    uint256 internal principalRequested = 1_000_000e18;
-    uint256 internal paymentInterest    = 1e18;
-    uint256 internal paymentPrincipal   = 0;
+    uint256 principalRequested = 1_000_000e18;
+    uint256 paymentInterest    = 1e18;
+    uint256 paymentPrincipal   = 0;
 
-    MockLoan internal loan;
+    MockLoan loan;
 
     function setUp() public override {
         super.setUp();
@@ -4112,7 +4114,7 @@ contract QueueNextPaymentTests is LoanManagerBaseTest {
 contract UintCastingTests is LoanManagerBaseTest {
 
     function test_castUint24() external {
-        vm.expectRevert("LM:UINT24_CAST");
+        vm.expectRevert("LM:UINT24");
         loanManager.castUint24(2 ** 24);
 
         uint256 castedValue = loanManager.castUint24(2 ** 24 - 1);
@@ -4121,7 +4123,7 @@ contract UintCastingTests is LoanManagerBaseTest {
     }
 
     function test_castUint48() external {
-        vm.expectRevert("LM:UINT48_CAST");
+        vm.expectRevert("LM:UINT48");
         loanManager.castUint48(2 ** 48);
 
         uint256 castedValue = loanManager.castUint48(2 ** 48 - 1);
@@ -4130,7 +4132,7 @@ contract UintCastingTests is LoanManagerBaseTest {
     }
 
     function test_castUint96() external {
-        vm.expectRevert("LM:UINT96_CAST");
+        vm.expectRevert("LM:UINT96");
         loanManager.castUint96(2 ** 96);
 
         uint256 castedValue = loanManager.castUint96(2 ** 96 - 1);
@@ -4139,7 +4141,7 @@ contract UintCastingTests is LoanManagerBaseTest {
     }
 
     function test_castUint112() external {
-        vm.expectRevert("LM:UINT112_CAST");
+        vm.expectRevert("LM:UINT112");
         loanManager.castUint112(2 ** 112);
 
         uint256 castedValue = loanManager.castUint112(2 ** 112 - 1);
@@ -4148,7 +4150,7 @@ contract UintCastingTests is LoanManagerBaseTest {
     }
 
     function test_castUint120() external {
-        vm.expectRevert("LM:UINT120_CAST");
+        vm.expectRevert("LM:UINT120");
         loanManager.castUint120(2 ** 120);
 
         uint256 castedValue = loanManager.castUint120(2 ** 120 - 1);
@@ -4157,7 +4159,7 @@ contract UintCastingTests is LoanManagerBaseTest {
     }
 
     function test_castUint128() external {
-        vm.expectRevert("LM:UINT128_CAST");
+        vm.expectRevert("LM:UINT128");
         loanManager.castUint128(2 ** 128);
 
         uint256 castedValue = loanManager.castUint128(2 ** 128 - 1);
@@ -4188,8 +4190,8 @@ contract UpdateAccountingFailureTests is LoanManagerBaseTest {
 
 contract UpdateAccountingTests is LoanManagerClaimBaseTest {
 
-    MockLoan internal loan1;
-    MockLoan internal loan2;
+    MockLoan loan1;
+    MockLoan loan2;
 
     function setUp() public override {
         super.setUp();
@@ -4233,7 +4235,7 @@ contract UpdateAccountingTests is LoanManagerClaimBaseTest {
         globals.__setProtocolPaused(true);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:UA:PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.updateAccounting();
     }
 
@@ -4401,7 +4403,7 @@ contract DisburseLiquidationFundsTests is LoanManagerBaseTest {
 
         fundsAsset.mint(address(loanManager), 300);
 
-        vm.expectRevert("LM:DLF:ZERO_ADDRESS");
+        vm.expectRevert("LM:DLF:ZERO_MT");
         loanManager.disburseLiquidationFunds(address(loan), 100, 100, 100);
     }
 
@@ -4419,115 +4421,8 @@ contract DistributeClaimedFunds is LoanManagerBaseTest {
         // Queue next payment to add loan to
         loanManager.__queueNextPayment(address(loan), START, START + 100);
 
-        vm.expectRevert("LM:DCF:ZERO_ADDRESS");
+        vm.expectRevert("LM:DCF:ZERO_MT");
         loanManager.distributeClaimedFunds(address(loan), 100, 100);
-    }
-
-}
-
-contract SetLoanTransferAdmin_SetterTests is LoanManagerBaseTest {
-
-    address internal SET_ADDRESS = address(new Address());
-
-    function testFail_setLoanTransferAdmin_notPoolDelegate() external {
-        loanManager.setLoanTransferAdmin(SET_ADDRESS);
-    }
-
-    function test_setLoanTransferAdmin_success() external {
-        assertEq(loanManager.loanTransferAdmin(), address(0));
-
-        vm.prank(poolDelegate);
-        loanManager.setLoanTransferAdmin(SET_ADDRESS);
-
-        assertEq(loanManager.loanTransferAdmin(), SET_ADDRESS);
-
-        vm.prank(poolDelegate);
-        loanManager.setLoanTransferAdmin(address(0));
-
-        assertEq(loanManager.loanTransferAdmin(), address(0));
-    }
-
-}
-
-contract SetOwnershipToTests is LoanManagerBaseTest {
-
-    address internal loan1 = address(new MockLoan(address(collateralAsset), address(fundsAsset)));
-    address internal loan2 = address(new MockLoan(address(collateralAsset), address(fundsAsset)));
-    address internal loan3 = address(new MockLoan(address(collateralAsset), address(fundsAsset)));
-
-    address internal loanTransferAdmin = address(new Address());
-    address internal destination       = address(new Address());
-
-    function setUp() public override {
-        super.setUp();
-
-        vm.prank(poolDelegate);
-        loanManager.setLoanTransferAdmin(loanTransferAdmin);
-    }
-
-    function testFail_setOwnershipTo_notLoanTransferAdmin() external {
-        address[] memory loans = new address[](3);
-        loans[0] = loan1;
-        loans[1] = loan2;
-        loans[2] = loan3;
-
-        address[] memory destinations = new address[](3);
-        destinations[0] = destination;
-        destinations[1] = destination;
-        destinations[2] = destination;
-
-        loanManager.setOwnershipTo(loans, destinations);
-    }
-
-    function test_setOwnershipTo_success() external {
-        address[] memory loans = new address[](3);
-        loans[0] = loan1;
-        loans[1] = loan2;
-        loans[2] = loan3;
-
-        address[] memory destinations = new address[](3);
-        destinations[0] = destination;
-        destinations[1] = destination;
-        destinations[2] = destination;
-
-        vm.prank(loanTransferAdmin);
-        loanManager.setOwnershipTo(loans, destinations);
-    }
-
-}
-
-contract TakeOwnershipTests is LoanManagerBaseTest {
-
-    address internal loan1 = address(new MockLoan(address(collateralAsset), address(fundsAsset)));
-    address internal loan2 = address(new MockLoan(address(collateralAsset), address(fundsAsset)));
-    address internal loan3 = address(new MockLoan(address(collateralAsset), address(fundsAsset)));
-
-    address internal loanTransferAdmin = address(new Address());
-
-    function setUp() public override {
-        super.setUp();
-
-        vm.prank(poolDelegate);
-        loanManager.setLoanTransferAdmin(loanTransferAdmin);
-    }
-
-    function testFail_takeOwnership_notLoanTransferAdmin() external {
-        address[] memory loans = new address[](3);
-        loans[0] = loan1;
-        loans[1] = loan2;
-        loans[2] = loan3;
-
-        loanManager.takeOwnership(loans);
-    }
-
-    function test_takeOwnership_success() external {
-        address[] memory loans = new address[](3);
-        loans[0] = loan1;
-        loans[1] = loan2;
-        loans[2] = loan3;
-
-        vm.prank(loanTransferAdmin);
-        loanManager.takeOwnership(loans);
     }
 
 }

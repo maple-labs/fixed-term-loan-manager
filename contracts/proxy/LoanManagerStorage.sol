@@ -43,8 +43,10 @@ abstract contract LoanManagerStorage is ILoanManagerStorage {
 
     // NOTE: Addresses below uints to preserve full storage slots
     address public override fundsAsset;
-    address public override loanTransferAdmin;
-    address public override pool;
+
+    address internal __deprecated_loanTransferAdmin;
+    address internal __deprecated_pool;
+
     address public override poolManager;
 
     mapping(address => uint24) public override paymentIdOf;

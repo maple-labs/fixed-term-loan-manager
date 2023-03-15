@@ -22,28 +22,28 @@ import { LoanManagerHarness } from "./harnesses/LoanManagerHarness.sol";
 
 contract LoanManagerBaseTest is TestUtils {
 
-    uint256 internal constant START = 5_000_000;
+    uint256 constant START = 5_000_000;
 
-    address internal governor     = address(new Address());
-    address internal pool         = address(new Address());
-    address internal poolDelegate = address(new Address());
-    address internal poolDeployer = address(new Address());
-    address internal treasury     = address(new Address());
+    address governor     = address(new Address());
+    address pool         = address(new Address());
+    address poolDelegate = address(new Address());
+    address poolDeployer = address(new Address());
+    address treasury     = address(new Address());
 
-    address internal implementation = address(new LoanManagerHarness());
-    address internal initializer    = address(new LoanManagerInitializer());
+    address implementation = address(new LoanManagerHarness());
+    address initializer    = address(new LoanManagerInitializer());
 
-    uint256 internal delegateManagementFeeRate = 15_0000;
-    uint256 internal platformManagementFeeRate = 5_0000;
+    uint256 delegateManagementFeeRate = 15_0000;
+    uint256 platformManagementFeeRate = 5_0000;
 
-    MockERC20       internal collateralAsset;
-    MockERC20       internal fundsAsset;
-    MockGlobals     internal globals;
-    MockLoanFactory internal loanFactory;
-    MockPoolManager internal poolManager;
+    MockERC20       collateralAsset;
+    MockERC20       fundsAsset;
+    MockGlobals     globals;
+    MockLoanFactory loanFactory;
+    MockPoolManager poolManager;
 
-    LoanManagerFactory internal factory;
-    LoanManagerHarness internal loanManager;
+    LoanManagerFactory factory;
+    LoanManagerHarness loanManager;
 
     function setUp() public virtual {
         collateralAsset = new MockERC20("CollateralAsset", "COL", 18);

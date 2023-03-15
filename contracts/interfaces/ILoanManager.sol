@@ -153,12 +153,6 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     function setAllowedSlippage(address collateralAsset_, uint256 allowedSlippage_) external;
 
     /**
-     *  @dev   Sets the address of the account that is able to call `setOwnershipTo` and `takeOwnership` for multiple loans.
-     *  @param newLoanTransferAdmin_ Address of the new admin.
-     */
-    function setLoanTransferAdmin(address newLoanTransferAdmin_) external;
-
-    /**
      *  @dev   Sets the minimum ratio for a collateral asset liquidation.
      *         This ratio is expressed as a decimal representation of units of fundsAsset
      *         per unit collateralAsset in fundsAsset decimal precision.
@@ -166,19 +160,6 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
      *  @param minRatio_         New value for `minRatio`.
      */
     function setMinRatio(address collateralAsset_, uint256 minRatio_) external;
-
-    /**
-     *  @dev   Sets the ownership of loans to an address.
-     *  @param loans_      An array of loan addresses.
-     *  @param newLenders_ An array of lenders to set pending ownership to.
-     */
-    function setOwnershipTo(address[] calldata loans_, address[] calldata newLenders_) external;
-
-    /**
-     *  @dev   Takes the ownership of the loans.
-     *  @param loans_ An array with multiple loan addresses.
-     */
-    function takeOwnership(address[] calldata loans_) external;
 
     /**
      *  @dev    Triggers the default of a loan.
@@ -234,34 +215,10 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     function getExpectedAmount(address collateralAsset_, uint256 swapAmount_) external view returns (uint256 returnAmount_);
 
     /**
-     *  @dev    Gets the address of the Maple globals contract.
-     *  @return globals_ The address of the Maple globals contract.
-     */
-    function globals() external view returns (address globals_);
-
-    /**
-     *  @dev    Gets the address of the governor contract.
-     *  @return governor_ The address of the governor contract.
-     */
-    function governor() external view returns (address governor_);
-
-    /**
      *  @dev    Returns whether or not a liquidation is in progress.
      *  @param  loan_     The address of the loan contract.
      *  @return isActive_ True if a liquidation is in progress.
      */
     function isLiquidationActive(address loan_) external view returns (bool isActive_);
-
-    /**
-     *  @dev    Gets the address of the Maple treasury.
-     *  @return treasury_ The address of the Maple treasury.
-     */
-    function mapleTreasury() external view returns (address treasury_);
-
-    /**
-     *  @dev    Gets the address of the pool delegate.
-     *  @return poolDelegate_ The address of the pool delegate.
-     */
-    function poolDelegate() external view returns (address poolDelegate_);
 
 }

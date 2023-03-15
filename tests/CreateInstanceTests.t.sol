@@ -11,17 +11,16 @@ import { MockFactory, MockGlobals, MockPoolManager } from "./mocks/Mocks.sol";
 
 contract CreateInstanceTests is Test {
 
-    address internal governor;
-    address internal implementation;
-    address internal initializer;
+    address governor;
+    address implementation;
+    address initializer;
 
     address asset        = makeAddr("asset");
-    address pool         = makeAddr("pool");
     address poolDeployer = makeAddr("poolDeployer");
 
-    MockGlobals     internal globals;
-    MockPoolManager internal poolManager;
-    MockFactory     internal poolManagerFactory;
+    MockGlobals     globals;
+    MockPoolManager poolManager;
+    MockFactory     poolManagerFactory;
 
     LoanManagerFactory internal factory;
 
@@ -43,7 +42,6 @@ contract CreateInstanceTests is Test {
         globals.setValidPoolDeployer(poolDeployer, true);
 
         poolManager.__setAsset(asset);
-        poolManager.__setPool(pool);
     }
 
     function test_createInstance_notPoolDeployer() external {
@@ -79,12 +77,11 @@ contract CreateInstanceTests is Test {
         vm.prank(poolDeployer);
         LoanManager loanManager_ = LoanManager(factory.createInstance(abi.encode(address(poolManager)), "SALT"));
 
-        assertEq(loanManager_.pool(),        pool);
         assertEq(loanManager_.fundsAsset(),  asset);
         assertEq(loanManager_.poolManager(), address(poolManager));
     }
 
-    function test_createInstance_asPoolManager() external {
+    function test_createInstance_success_asPoolManager() external {
         globals.__setIsFactory(true);
         poolManager.__setFactory(address(poolManagerFactory));
         poolManagerFactory.__setIsInstance(true);
@@ -92,7 +89,6 @@ contract CreateInstanceTests is Test {
         vm.prank(address(poolManager));
         LoanManager loanManager_ = LoanManager(factory.createInstance(abi.encode(address(poolManager)), "SALT"));
 
-        assertEq(loanManager_.pool(),        pool);
         assertEq(loanManager_.fundsAsset(),  asset);
         assertEq(loanManager_.poolManager(), address(poolManager));
     }

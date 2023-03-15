@@ -172,6 +172,10 @@ contract MockLoan {
         isImpaired               = true;
     }
 
+    function __setBorrower(address borrower_) external {
+        borrower = borrower_;
+    }
+
     function __setCollateral(uint256 collateral_) external {
         collateral = collateral_;
     }

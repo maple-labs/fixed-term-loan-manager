@@ -63,52 +63,17 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function upgrade(uint256 version_, bytes calldata arguments_) external override {
-        address poolDelegate_ = IPoolManagerLike(poolManager).poolDelegate();
+        IMapleGlobalsLike globals_ = IMapleGlobalsLike(_globals());
 
-        require(msg.sender == poolDelegate_ || msg.sender == governor(), "LM:U:NO_AUTH");
+        if (msg.sender == _poolDelegate()) {
+            require(globals_.isValidScheduledCall(msg.sender, address(this), "LM:UPGRADE", msg.data), "LM:U:INVALID_SCHED_CALL");
 
-        IMapleGlobalsLike mapleGlobals = IMapleGlobalsLike(globals());
-
-        if (msg.sender == poolDelegate_) {
-            require(mapleGlobals.isValidScheduledCall(msg.sender, address(this), "LM:UPGRADE", msg.data), "LM:U:INVALID_SCHED_CALL");
-
-            mapleGlobals.unscheduleCall(msg.sender, "LM:UPGRADE", msg.data);
+            globals_.unscheduleCall(msg.sender, "LM:UPGRADE", msg.data);
+        } else {
+            require(msg.sender == _governor(), "LM:U:NO_AUTH");
         }
 
         IMapleProxyFactory(_factory()).upgradeInstance(version_, arguments_);
-    }
-
-    /**************************************************************************************************************************************/
-    /*** Loan Ownership Functions                                                                                                       ***/
-    /**************************************************************************************************************************************/
-
-    function setLoanTransferAdmin(address newLoanTransferAdmin_) external override {
-        require(msg.sender == IPoolManagerLike(poolManager).poolDelegate());
-        emit LoanTransferAdminSet(loanTransferAdmin = newLoanTransferAdmin_);
-    }
-
-    function setOwnershipTo(address[] calldata loans_, address[] calldata newLenders_) external override {
-        require(msg.sender == loanTransferAdmin);
-
-        require(loans_.length == newLenders_.length);
-
-        uint256 length_ = loans_.length;
-
-        for (uint256 i_; i_ < length_;) {
-            IMapleLoanLike(loans_[i_]).setPendingLender(newLenders_[i_]);
-            unchecked{ i_++; }
-        }
-    }
-
-    function takeOwnership(address[] calldata loans_) external override {
-        require(msg.sender == loanTransferAdmin);
-
-        uint256 length_ = loans_.length;
-
-        for (uint256 i_; i_ < length_;) {
-            IMapleLoanLike(loans_[i_]).acceptLender();
-            unchecked{ i_++; }
-        }
     }
 
     /**************************************************************************************************************************************/
@@ -116,16 +81,18 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /**************************************************************************************************************************************/
 
     function setAllowedSlippage(address collateralAsset_, uint256 allowedSlippage_) external override {
-        require(!IMapleGlobalsLike(globals()).protocolPaused(),           "LM:SAS:PAUSED");
-        require(msg.sender == poolDelegate() || msg.sender == governor(), "LM:SAS:NO_AUTH");
-        require(allowedSlippage_ <= HUNDRED_PERCENT,                      "LM:SAS:INVALID_SLIPPAGE");
+        _requireProtocolNotPaused();
+
+        require(msg.sender == _poolDelegate() || msg.sender == _governor(), "LM:SAS:NO_AUTH");
+        require(allowedSlippage_ <= HUNDRED_PERCENT,                        "LM:SAS:INVALID_SLIPPAGE");
 
         emit AllowedSlippageSet(collateralAsset_, allowedSlippageFor[collateralAsset_] = allowedSlippage_);
     }
 
     function setMinRatio(address collateralAsset_, uint256 minRatio_) external override {
-        require(!IMapleGlobalsLike(globals()).protocolPaused(),           "LM:SMR:PAUSED");
-        require(msg.sender == poolDelegate() || msg.sender == governor(), "LM:SMR:NO_AUTH");
+        _requireProtocolNotPaused();
+
+        require(msg.sender == _poolDelegate() || msg.sender == _governor(), "LM:SMR:NO_AUTH");
 
         emit MinRatioSet(collateralAsset_, minRatioFor[collateralAsset_] = minRatio_);
     }
@@ -135,8 +102,9 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /**************************************************************************************************************************************/
 
     function updateAccounting() external override {
-        require(!IMapleGlobalsLike(globals()).protocolPaused(),           "LM:UA:PAUSED");
-        require(msg.sender == poolDelegate() || msg.sender == governor(), "LM:UA:NO_AUTH");
+        _requireProtocolNotPaused();
+
+        require(msg.sender == _poolDelegate() || msg.sender == _governor(), "LM:UA:NO_AUTH");
 
         _advanceGlobalPaymentAccounting();
 
@@ -156,18 +124,13 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     )
         external override nonReentrant
     {
-        require(!IMapleGlobalsLike(globals()).protocolPaused(), "LM:ANT:PAUSED");
-        require(msg.sender == poolDelegate(),                   "LM:ANT:NOT_PD");
+        _requireProtocolNotPaused();
+
+        require(msg.sender == _poolDelegate(), "LM:ANT:NOT_PD");
 
         _advanceGlobalPaymentAccounting();
 
-        uint256 paymentId_ = paymentIdOf[loan_];
-
-        require(paymentId_ != 0, "LM:ANT:NOT_LOAN");
-
-        PaymentInfo memory paymentInfo_ = payments[paymentId_];
-
-        uint256 previousRate_      = _handlePreviousPaymentAccounting(loan_, block.timestamp <= paymentInfo_.paymentDueDate);
+        uint256 previousRate_      = _handlePreviousPaymentAccounting(loan_);
         uint256 previousPrincipal_ = IMapleLoanLike(loan_).principal();
 
         if (principalIncrease_ > 0) IPoolManagerLike(poolManager).requestFunds(loan_, principalIncrease_);
@@ -187,15 +150,15 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function fund(address loan_) external override nonReentrant {
-        require(msg.sender == poolDelegate(), "LM:F:NOT_PD");
+        require(msg.sender == _poolDelegate(), "LM:F:NOT_PD");
 
-        address factory_ = IMapleLoanLike(loan_).factory();
-        address globals_ = globals();
+        address           factory_ = IMapleLoanLike(loan_).factory();
+        IMapleGlobalsLike globals_ = IMapleGlobalsLike(_globals());
 
-        require(IMapleGlobalsLike(globals_).isFactory("FT_LOAN", factory_),               "LM:F:INVALID_LOAN_FACTORY");
-        require(ILoanFactoryLike(factory_).isLoan(loan_),                                 "LM:F:INVALID_LOAN_INSTANCE");
-        require(IMapleGlobalsLike(globals_).isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INVALID_BORROWER");
-        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,                           "LM:F:LOAN_NOT_ACTIVE");
+        require(globals_.isFactory("FT_LOAN", factory_),               "LM:F:INVALID_LOAN_FACTORY");
+        require(ILoanFactoryLike(factory_).isLoan(loan_),              "LM:F:INVALID_LOAN_INSTANCE");
+        require(globals_.isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INVALID_BORROWER");
+        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,        "LM:F:LOAN_NOT_ACTIVE");
 
         uint256 principal_ = IMapleLoanLike(loan_).principalRequested();
 
@@ -226,8 +189,6 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     )
         external override nonReentrant
     {
-        require(paymentIdOf[msg.sender] != 0, "LM:C:NOT_LOAN");
-
         // 1. Advance the global accounting.
         //    - Update `domainStart` to the current `block.timestamp`.
         //    - Update `accountedInterest` to account all accrued interest since last update.
@@ -242,14 +203,14 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         }
 
         // 4. Update the accounting based on the payment that was just made.
-        bool    onTimePayment_ = block.timestamp <= previousPaymentDueDate_;
-        uint256 previousRate_  = _handlePreviousPaymentAccounting(msg.sender, onTimePayment_);
+        uint256 previousRate_ = _handlePreviousPaymentAccounting(msg.sender);
 
         // 5. If there is no next payment for this loan, update the global accounting and exit.
         //    - Delete the paymentId from the `paymentIdOf` mapping since there is no next payment.
         if (nextPaymentDueDate_ == 0) {
             delete paymentIdOf[msg.sender];
-            return _updateIssuanceParams(issuanceRate - previousRate_, accountedInterest);
+            _updateIssuanceParams(issuanceRate - previousRate_, accountedInterest);
+            return;
         }
 
         // 6. Calculate the start date of the next loan payment.
@@ -267,8 +228,9 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         // 8a. If the payment is early, the `accountedInterest` is already fully up to date.
         //      In this case, the `issuanceRate` is the only variable that needs to be updated.
-        if (onTimePayment_) {
-            return _updateIssuanceParams(issuanceRate + newRate_ - previousRate_, accountedInterest);
+        if (block.timestamp <= previousPaymentDueDate_) {
+            _updateIssuanceParams(issuanceRate + newRate_ - previousRate_, accountedInterest);
+            return;
         }
 
         // 8b. If the payment is late, the `issuanceRate` from the previous payment has already been removed from the global `issuanceRate`.
@@ -278,29 +240,28 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         //     Payment `issuanceRate` is used for this calculation as the issuance has occurred in isolation and entirely in the past.
         //     All interest from the aggregate issuance rate has already been accounted for in `_advanceGlobalPaymentAccounting`.
         if (block.timestamp <= nextPaymentDueDate_) {
-            return _updateIssuanceParams(
+            _updateIssuanceParams(
                 issuanceRate + newRate_,
                 accountedInterest + _uint112((block.timestamp - previousPaymentDueDate_) * newRate_ / PRECISION)
             );
+            return;
         }
 
         // 8c. If the current timestamp is greater than the RESULTING `nextPaymentDueDate`, then the next payment must be
         //     FULLY accounted for, and the new payment must be removed from the sorted list.
         //     Payment `issuanceRate` is used for this calculation as the issuance has occurred in isolation and entirely in the past.
         //     All interest from the aggregate issuance rate has already been accounted for in `_advanceGlobalPaymentAccounting`.
-        else {
-            ( uint256 accountedInterestIncrease_, ) = _accountToEndOfPayment(
-                paymentIdOf[msg.sender],
-                newRate_,
-                previousPaymentDueDate_,
-                nextPaymentDueDate_
-            );
+        ( uint256 accountedInterestIncrease_, ) = _accountToEndOfPayment(
+            paymentIdOf[msg.sender],
+            newRate_,
+            previousPaymentDueDate_,
+            nextPaymentDueDate_
+        );
 
-            return _updateIssuanceParams(
-                issuanceRate,
-                accountedInterest + _uint112(accountedInterestIncrease_)
-            );
-        }
+        _updateIssuanceParams(
+            issuanceRate,
+            accountedInterest + _uint112(accountedInterestIncrease_)
+        );
     }
 
     /**************************************************************************************************************************************/
@@ -308,12 +269,12 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /**************************************************************************************************************************************/
 
     function impairLoan(address loan_) external override {
-        require(!IMapleGlobalsLike(globals()).protocolPaused(), "LM:IL:PAUSED");
+        _requireProtocolNotPaused();
 
-        bool isGovernor_ = msg.sender == governor();
+        bool isGovernor_ = msg.sender == _governor();
 
-        require(isGovernor_ || msg.sender == poolDelegate(), "LM:IL:NO_AUTH");
-        require(!IMapleLoanLike(loan_).isImpaired(),         "LM:IL:IMPAIRED");
+        require(isGovernor_ || msg.sender == _poolDelegate(), "LM:IL:NO_AUTH");
+        require(!IMapleLoanLike(loan_).isImpaired(),          "LM:IL:IMPAIRED");
 
         // NOTE: Must get payment info prior to advancing payment accounting, because that will set issuance rate to 0.
         uint256 paymentId_ = paymentIdOf[loan_];
@@ -348,13 +309,13 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function removeLoanImpairment(address loan_) external override nonReentrant {
-        require(!IMapleGlobalsLike(globals()).protocolPaused(), "LM:RLI:PAUSED");
+        _requireProtocolNotPaused();
 
         LiquidationInfo memory liquidationInfo_ = liquidationInfo[loan_];
 
         require(
-            msg.sender == governor() ||
-            (!liquidationInfo_.triggeredByGovernor && msg.sender == poolDelegate()),
+            msg.sender == _governor() ||
+            (!liquidationInfo_.triggeredByGovernor && msg.sender == _poolDelegate()),
             "LM:RLI:NO_AUTH"
         );
 
@@ -506,12 +467,12 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         payments[paymentId_].issuanceRate = 0;
     }
 
-    function _handlePreviousPaymentAccounting(address loan_, bool onTimePayment_) internal returns (uint256 previousRate_) {
+    function _handlePreviousPaymentAccounting(address loan_) internal returns (uint256 previousRate_) {
         LiquidationInfo memory liquidationInfo_ = liquidationInfo[loan_];
 
         uint256 paymentId_ = paymentIdOf[loan_];
 
-        require(paymentId_ != 0, "LM:IL:NOT_LOAN");
+        require(paymentId_ != 0, "LM:HPPA:NOT_LOAN");
 
         PaymentInfo memory paymentInfo_ = payments[paymentId_];
 
@@ -530,7 +491,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         // If a payment has been made late, its interest has already been fully accounted through `_advanceGlobalPaymentAccounting` logic.
         // It also has been removed from the sorted list, and its `issuanceRate` has been removed from the global `issuanceRate`.
         // The only accounting that must be done is to update the `accountedInterest` to account for the payment being made.
-        if (!onTimePayment_) {
+        if (block.timestamp > paymentInfo_.paymentDueDate) {
             _compareAndSubtractAccountedInterest(paymentInfo_.incomingNetInterest + paymentInfo_.refinanceInterest);
             return 0;
         }
@@ -551,7 +512,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function _queueNextPayment(address loan_, uint256 startDate_, uint256 nextPaymentDueDate_) internal returns (uint256 newRate_) {
-        uint256 platformManagementFeeRate_ = IMapleGlobalsLike(globals()).platformManagementFeeRate(poolManager);
+        uint256 platformManagementFeeRate_ = IMapleGlobalsLike(_globals()).platformManagementFeeRate(poolManager);
         uint256 delegateManagementFeeRate_ = IPoolManagerLike(poolManager).delegateManagementFeeRate();
         uint256 managementFeeRate_         = platformManagementFeeRate_ + delegateManagementFeeRate_;
 
@@ -700,18 +661,24 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         updatedRemainingLosses_ = (remainingLosses_ -= toPool_);
 
-        address fundsAsset_    = fundsAsset;
-        address mapleTreasury_ = mapleTreasury();
+        address fundsAsset_ = fundsAsset;
+        address pool_       = _pool();
 
-        require(mapleTreasury_ != address(0), "LM:DLF:ZERO_ADDRESS");
+        require(pool_ != address(0), "LM:DLF:ZERO_P");
 
-        require(toTreasury_ == 0 || ERC20Helper.transfer(fundsAsset_, mapleTreasury_, toTreasury_), "LM:DLF:TRANSFER_MT");
-        require(toPool_     == 0 || ERC20Helper.transfer(fundsAsset_, pool,           toPool_),     "LM:DLF:TRANSFER_POOL");
+        require(toPool_ == 0 || ERC20Helper.transfer(fundsAsset_, pool_, toPool_), "LM:DLF:TRANSFER_P");
 
-        require(
-            recoveredFunds_ == 0 || ERC20Helper.transfer(fundsAsset_, IMapleLoanLike(loan_).borrower(), recoveredFunds_),
-            "LM:DLF:TRANSFER_B"
-        );
+        address treasury_ = _treasury();
+
+        require(treasury_ != address(0), "LM:DLF:ZERO_MT");
+
+        require(toTreasury_ == 0 || ERC20Helper.transfer(fundsAsset_, treasury_, toTreasury_), "LM:DLF:TRANSFER_MT");
+
+        address borrower_ = IMapleLoanLike(loan_).borrower();
+
+        require(borrower_ != address(0), "LM:DLF:ZERO_B");
+
+        require(recoveredFunds_ == 0 || ERC20Helper.transfer(fundsAsset_, borrower_, recoveredFunds_), "LM:DLF:TRANSFER_B");
 
     }
 
@@ -726,19 +693,29 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
             ? interest_ * payments[paymentId_].delegateManagementFeeRate / HUNDRED_PERCENT
             : 0;
 
-        address mapleTreasury_ = mapleTreasury();
-
-        require(mapleTreasury_ != address(0), "LM:DCF:ZERO_ADDRESS");
-
         uint256 netInterest_ = interest_ - platformFee_ - delegateFee_;
-
-        require(ERC20Helper.transfer(fundsAsset, pool,           principal_ + netInterest_), "LM:DCF:POOL_TRANSFER");
-        require(ERC20Helper.transfer(fundsAsset, mapleTreasury_, platformFee_),              "LM:DCF:MT_TRANSFER");
-
-        require(delegateFee_ == 0 || ERC20Helper.transfer(fundsAsset, poolDelegate(), delegateFee_), "LM:DCF:PD_TRANSFER");
 
         emit ManagementFeesPaid(loan_, delegateFee_, platformFee_);
         emit FundsDistributed(loan_, principal_, netInterest_);
+
+        address fundsAsset_ = fundsAsset;
+        address pool_       = _pool();
+
+        require(pool_ != address(0), "LM:DCF:ZERO_P");
+
+        require(ERC20Helper.transfer(fundsAsset_, pool_, principal_ + netInterest_), "LM:DCF:TRANSFER_P");
+
+        address treasury_ = _treasury();
+
+        require(treasury_ != address(0), "LM:DCF:ZERO_MT");
+
+        require(platformFee_ == 0 || ERC20Helper.transfer(fundsAsset_, treasury_, platformFee_), "LM:DCF:TRANSFER_MT");
+
+        address poolDelegate_ = _poolDelegate();
+
+        require(poolDelegate_ != address(0), "LM:DCF:ZERO_PD");
+
+        require(delegateFee_ == 0 || ERC20Helper.transfer(fundsAsset_, poolDelegate_, delegateFee_), "LM:DCF:TRANSFER_PD");
     }
 
     /**************************************************************************************************************************************/
@@ -965,18 +942,18 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function getExpectedAmount(address collateralAsset_, uint256 swapAmount_) public view override returns (uint256 returnAmount_) {
-        address globals_ = globals();
+        IMapleGlobalsLike globals_ = IMapleGlobalsLike(_globals());
 
         uint256 collateralAssetDecimals_ = uint256(10) ** uint256(IERC20Like(collateralAsset_).decimals());
 
         uint256 oracleAmount =
             swapAmount_
-                * IMapleGlobalsLike(globals_).getLatestPrice(collateralAsset_)  // Convert from `fromAsset` value.
-                * uint256(10) ** uint256(IERC20Like(fundsAsset).decimals())     // Convert to `toAsset` decimal precision.
-                * (HUNDRED_PERCENT - allowedSlippageFor[collateralAsset_])      // Multiply by allowed slippage basis points
-                / IMapleGlobalsLike(globals_).getLatestPrice(fundsAsset)        // Convert to `toAsset` value.
-                / collateralAssetDecimals_                                      // Convert from `fromAsset` decimal precision.
-                / HUNDRED_PERCENT;                                              // Divide basis points for slippage.
+                * globals_.getLatestPrice(collateralAsset_)                  // Convert from `fromAsset` value.
+                * uint256(10) ** uint256(IERC20Like(fundsAsset).decimals())  // Convert to `toAsset` decimal precision.
+                * (HUNDRED_PERCENT - allowedSlippageFor[collateralAsset_])   // Multiply by allowed slippage basis points
+                / globals_.getLatestPrice(fundsAsset)                        // Convert to `toAsset` value.
+                / collateralAssetDecimals_                                   // Convert from `fromAsset` decimal precision.
+                / HUNDRED_PERCENT;                                           // Divide basis points for slippage.
 
         uint256 minRatioAmount = (swapAmount_ * minRatioFor[collateralAsset_]) / collateralAssetDecimals_;
 
@@ -997,24 +974,36 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         factory_ = _factory();
     }
 
-    function globals() public view override returns (address globals_) {
-        globals_ = IMapleProxyFactory(_factory()).mapleGlobals();
-    }
-
-    function governor() public view override returns (address governor_) {
-        governor_ = IMapleGlobalsLike(globals()).governor();
-    }
-
     function implementation() external view override returns (address implementation_) {
         implementation_ = _implementation();
     }
 
-    function mapleTreasury() public view override returns (address treasury_) {
-        treasury_ = IMapleGlobalsLike(globals()).mapleTreasury();
+    /**************************************************************************************************************************************/
+    /*** Internal View Functions                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    function _globals() internal view returns (address globals_) {
+        globals_ = IMapleProxyFactory(_factory()).mapleGlobals();
     }
 
-    function poolDelegate() public view override returns (address poolDelegate_) {
+    function _governor() internal view returns (address governor_) {
+        governor_ = IMapleGlobalsLike(_globals()).governor();
+    }
+
+    function _pool() internal view returns (address pool_) {
+        pool_ = IPoolManagerLike(poolManager).pool();
+    }
+
+    function _poolDelegate() internal view returns (address poolDelegate_) {
         poolDelegate_ = IPoolManagerLike(poolManager).poolDelegate();
+    }
+
+    function _requireProtocolNotPaused() internal view {
+        require(!IMapleGlobalsLike(_globals()).protocolPaused(), "LM:PAUSED");
+    }
+
+    function _treasury() internal view returns (address treasury_) {
+        treasury_ = IMapleGlobalsLike(_globals()).mapleTreasury();
     }
 
     /**************************************************************************************************************************************/
@@ -1026,32 +1015,32 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function _uint24(uint256 input_) internal pure returns (uint24 output_) {
-        require(input_ <= type(uint24).max, "LM:UINT24_CAST");
+        require(input_ <= type(uint24).max, "LM:UINT24");
         output_ = uint24(input_);
     }
 
     function _uint48(uint256 input_) internal pure returns (uint48 output_) {
-        require(input_ <= type(uint48).max, "LM:UINT48_CAST");
+        require(input_ <= type(uint48).max, "LM:UINT48");
         output_ = uint48(input_);
     }
 
     function _uint96(uint256 input_) internal pure returns (uint96 output_) {
-        require(input_ <= type(uint96).max, "LM:UINT96_CAST");
+        require(input_ <= type(uint96).max, "LM:UINT96");
         output_ = uint96(input_);
     }
 
     function _uint112(uint256 input_) internal pure returns (uint112 output_) {
-        require(input_ <= type(uint112).max, "LM:UINT112_CAST");
+        require(input_ <= type(uint112).max, "LM:UINT112");
         output_ = uint112(input_);
     }
 
     function _uint120(uint256 input_) internal pure returns (uint120 output_) {
-        require(input_ <= type(uint120).max, "LM:UINT120_CAST");
+        require(input_ <= type(uint120).max, "LM:UINT120");
         output_ = uint120(input_);
     }
 
     function _uint128(uint256 input_) internal pure returns (uint128 output_) {
-        require(input_ <= type(uint128).max, "LM:UINT128_CAST");
+        require(input_ <= type(uint128).max, "LM:UINT128");
         output_ = uint128(input_);
     }
 

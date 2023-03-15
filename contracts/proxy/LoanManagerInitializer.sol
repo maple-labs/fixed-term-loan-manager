@@ -22,7 +22,6 @@ contract LoanManagerInitializer is ILoanManagerInitializer, LoanManagerStorage {
         poolManager = poolManager_;
 
         fundsAsset = IPoolManagerLike(poolManager_).asset();
-        pool       = IPoolManagerLike(poolManager_).pool();
 
         emit Initialized(poolManager);
     }

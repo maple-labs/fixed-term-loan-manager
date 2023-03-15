@@ -60,12 +60,6 @@ interface ILoanManagerStorage {
     );
 
     /**
-     *  @dev    Returns the current `loanTransferAdmin` address.
-     *  @return loanTransferAdmin_ The payment counter.
-     */
-    function loanTransferAdmin() external view returns (address loanTransferAdmin_);
-
-    /**
      *  @dev   Gets the minimum ratio for a collateral asset.
      *  @param collateralAsset_  Address of a collateral asset.
      *  @param minRatio_         The value for minRatio.
@@ -111,12 +105,6 @@ interface ILoanManagerStorage {
      *  @return paymentWithEarliestDueDate_ The payment id with the earliest due date.
      */
     function paymentWithEarliestDueDate() external view returns (uint24 paymentWithEarliestDueDate_);
-
-    /**
-     *  @dev    Gets the address of the pool.
-     *  @return pool_ The address of the pool.
-     */
-    function pool() external view returns (address pool_);
 
     /**
      *  @dev    Gets the address of the pool manager.
