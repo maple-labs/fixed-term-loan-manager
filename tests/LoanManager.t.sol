@@ -194,52 +194,66 @@ contract UpgradeTests is LoanManagerBaseTest {
 
 contract SetAllowedSlippage_SetterTests is LoanManagerBaseTest {
 
-    function test_setAllowedSlippage_notPoolManager() external {
-        vm.expectRevert("LM:SAS:NOT_PM");
-        loanManager.setAllowedSlippage(address(collateralAsset), 1e6);
+    function test_setAllowedSlippage_paused() external {
+        globals.__setProtocolPaused(true);
+
+        vm.expectRevert("LM:SAS:PAUSED");
+        loanManager.setAllowedSlippage(address(collateralAsset), 0);
+    }
+
+    function test_setAllowedSlippage_noAuth() external {
+        vm.expectRevert("LM:SAS:NO_AUTH");
+        loanManager.setAllowedSlippage(address(collateralAsset), 0);
     }
 
     function test_setAllowedSlippage_invalidSlippage() external {
-        vm.prank(address(poolManager));
+        vm.prank(poolDelegate);
         vm.expectRevert("LM:SAS:INVALID_SLIPPAGE");
         loanManager.setAllowedSlippage(address(collateralAsset), 1e6 + 1);
     }
 
-    function test_setAllowedSlippage_success() external {
-        assertEq(loanManager.allowedSlippageFor(address(collateralAsset)), 0);
-
-        vm.prank(address(poolManager));
+    function test_setAllowedSlippage_success_asGovernor() external {
+        vm.prank(governor);
         loanManager.setAllowedSlippage(address(collateralAsset), 1e6);
 
         assertEq(loanManager.allowedSlippageFor(address(collateralAsset)), 1e6);
+    }
 
-        vm.prank(address(poolManager));
-        loanManager.setAllowedSlippage(address(collateralAsset), 0);
+    function test_setAllowedSlippage_success_asPoolDelegate() external {
+        vm.prank(governor);
+        loanManager.setAllowedSlippage(address(collateralAsset), 1e6);
 
-        assertEq(loanManager.allowedSlippageFor(address(collateralAsset)), 0);
+        assertEq(loanManager.allowedSlippageFor(address(collateralAsset)), 1e6);
     }
 
 }
 
 contract SetMinRatio_SetterTests is LoanManagerBaseTest {
 
-    function test_setMinRatio_notPoolManager() external {
-        vm.expectRevert("LM:SMR:NOT_PM");
-        loanManager.setMinRatio(address(collateralAsset), 1e6);
+    function test_setMinRatio_paused() external {
+        globals.__setProtocolPaused(true);
+
+        vm.expectRevert("LM:SMR:PAUSED");
+        loanManager.setMinRatio(address(collateralAsset), 0);
     }
 
-    function test_setMinRatio_success() external {
-        assertEq(loanManager.minRatioFor(address(collateralAsset)), 0);
+    function test_setMinRatio_noAuth() external {
+        vm.expectRevert("LM:SMR:NO_AUTH");
+        loanManager.setMinRatio(address(collateralAsset), 0);
+    }
 
-        vm.prank(address(poolManager));
+    function test_setMinRatio_success_asPoolDelegate() external {
+        vm.prank(poolDelegate);
         loanManager.setMinRatio(address(collateralAsset), 1e6);
 
         assertEq(loanManager.minRatioFor(address(collateralAsset)), 1e6);
+    }
 
-        vm.prank(address(poolManager));
-        loanManager.setMinRatio(address(collateralAsset), 0);
+    function test_setMinRatio_success_asGovernor() external {
+        vm.prank(governor);
+        loanManager.setMinRatio(address(collateralAsset), 1e6);
 
-        assertEq(loanManager.minRatioFor(address(collateralAsset)), 0);
+        assertEq(loanManager.minRatioFor(address(collateralAsset)), 1e6);
     }
 
 }

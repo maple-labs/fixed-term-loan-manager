@@ -116,14 +116,17 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /**************************************************************************************************************************************/
 
     function setAllowedSlippage(address collateralAsset_, uint256 allowedSlippage_) external override {
-        require(msg.sender == poolManager,           "LM:SAS:NOT_PM");
-        require(allowedSlippage_ <= HUNDRED_PERCENT, "LM:SAS:INVALID_SLIPPAGE");
+        require(!IMapleGlobalsLike(globals()).protocolPaused(),           "LM:SAS:PAUSED");
+        require(msg.sender == poolDelegate() || msg.sender == governor(), "LM:SAS:NO_AUTH");
+        require(allowedSlippage_ <= HUNDRED_PERCENT,                      "LM:SAS:INVALID_SLIPPAGE");
 
         emit AllowedSlippageSet(collateralAsset_, allowedSlippageFor[collateralAsset_] = allowedSlippage_);
     }
 
     function setMinRatio(address collateralAsset_, uint256 minRatio_) external override {
-        require(msg.sender == poolManager, "LM:SMR:NOT_PM");
+        require(!IMapleGlobalsLike(globals()).protocolPaused(),           "LM:SMR:PAUSED");
+        require(msg.sender == poolDelegate() || msg.sender == governor(), "LM:SMR:NO_AUTH");
+
         emit MinRatioSet(collateralAsset_, minRatioFor[collateralAsset_] = minRatio_);
     }
 
