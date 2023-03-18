@@ -177,6 +177,12 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         );
     }
 
+    function rejectNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external override {
+        require(msg.sender == _poolDelegate(), "LM:RNT:NOT_PD");
+
+        IMapleLoanLike(loan_).rejectNewTerms(refinancer_, deadline_, calls_);
+    }
+
     /**************************************************************************************************************************************/
     /*** Loan Payment Claim Function                                                                                                    ***/
     /**************************************************************************************************************************************/

@@ -151,6 +151,12 @@ contract MockLoan {
         MockERC20(collateralAsset).transfer(destination_, collateral);
     }
 
+    function rejectNewTerms(
+        address refinancer_,
+        uint256 deadline_,
+        bytes[] calldata calls_
+    ) external returns (bytes32 refinanceCommitment_) {}
+
     function removeLoanImpairment() external {
         nextPaymentDueDate = unimpairedPaymentDueDate;
         delete unimpairedPaymentDueDate;

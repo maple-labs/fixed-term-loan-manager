@@ -4426,3 +4426,23 @@ contract DistributeClaimedFunds is TestBase {
     }
 
 }
+
+contract RejectNewTermsTests is TestBase {
+
+    function setUp() public override {
+        super.setUp();
+    }
+
+    function test_rejectNewTerms_notPoolDelegate() external {
+        vm.expectRevert("LM:RNT:NOT_PD");
+        loanManager.rejectNewTerms(address(0), address(0), 0, new bytes[](0));
+    }
+
+    function test_rejectNewTerms_success() external {
+        MockLoan loan = new MockLoan(address(0), address(0));
+
+        vm.prank(poolDelegate);
+        loanManager.rejectNewTerms(address(loan), address(0), 0, new bytes[](0));
+    }
+
+}

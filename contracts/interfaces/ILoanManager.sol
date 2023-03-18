@@ -146,6 +146,15 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     function removeLoanImpairment(address loan_) external;
 
     /**
+     *  @dev   Reject/cancel proposed new terms for a loan.
+     *  @param loan_       The loan with the proposed new changes.
+     *  @param refinancer_ The refinancer to use in the refinance.
+     *  @param deadline_   The deadline by which the lender must accept the new terms.
+     *  @param calls_      The array of calls to be made to the refinancer.
+     */
+    function rejectNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external;
+
+    /**
      *  @dev   Sets the allowed slippage for a collateral asset liquidation.
      *  @param collateralAsset_  Address of a collateral asset.
      *  @param allowedSlippage_  New value for `allowedSlippage`.
