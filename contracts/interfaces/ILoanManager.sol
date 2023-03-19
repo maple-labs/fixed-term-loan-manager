@@ -213,7 +213,7 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
      *  @dev    Gets the amount of accrued interest up until this point in time.
      *  @return accruedInterest_ The amount of accrued interest up until this point in time.
      */
-    function getAccruedInterest() external view returns (uint256 accruedInterest_);
+    function accruedInterest() external view returns (uint256 accruedInterest_);
 
     /**
      *  @dev    Gets the expected amount of an asset given the input amount.

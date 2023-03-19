@@ -305,7 +305,7 @@ contract ClaimTestBase is TestBase {
     )
         internal
     {
-        assertEq(loanManager.getAccruedInterest(),    accruedInterest);
+        assertEq(loanManager.accruedInterest(),       accruedInterest);
         assertEq(loanManager.accountedInterest(),     accountedInterest);
         assertEq(loanManager.principalOut(),          principalOut);
         assertEq(loanManager.assetsUnderManagement(), assetsUnderManagement);
@@ -455,7 +455,7 @@ contract FinishCollateralLiquidationTests is TestBase {
 
         assertEq(paymentId, 0);  // Loan should be deleted.
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          80);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_080);
@@ -490,7 +490,7 @@ contract FinishCollateralLiquidationTests is TestBase {
         assertEq(remainingLosses_, 1_000_088);  // No collateral was liquidated since there is none. Remaining losses include late interest.
         assertEq(platformFee_,     20 + 5);     // 20 (platform service fee) + 100 * 5% (platform management fee)
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               0);
         assertEq(loanManager.assetsUnderManagement(),      0);
@@ -573,7 +573,7 @@ contract ImpairLoanTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         48);         // 60 * (1 - (.05 + .15))
+        assertEq(loanManager.accruedInterest(),            48);         // 60 * (1 - (.05 + .15))
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -605,7 +605,7 @@ contract ImpairLoanTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -635,7 +635,7 @@ contract ImpairLoanTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -672,7 +672,7 @@ contract ImpairLoanTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         48);         // 60 * (1 - (.05 + .15))
+        assertEq(loanManager.accruedInterest(),         48);         // 60 * (1 - (.05 + .15))
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -706,7 +706,7 @@ contract ImpairLoanTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -839,7 +839,7 @@ contract RemoveLoanImpairmentTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -870,7 +870,7 @@ contract RemoveLoanImpairmentTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -900,7 +900,7 @@ contract RemoveLoanImpairmentTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         32);
+        assertEq(loanManager.accruedInterest(),            32);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_080);
@@ -927,7 +927,7 @@ contract RemoveLoanImpairmentTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -958,7 +958,7 @@ contract RemoveLoanImpairmentTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -988,7 +988,7 @@ contract RemoveLoanImpairmentTests is TestBase {
         assertEq(paymentInfo.startDate,           5_000_000);
         assertEq(paymentInfo.paymentDueDate,      5_010_000);
 
-        assertEq(loanManager.getAccruedInterest(),         32);
+        assertEq(loanManager.accruedInterest(),            32);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_080);
@@ -3198,7 +3198,7 @@ contract TriggerDefaultTests is TestBase {
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(loan));
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -3232,7 +3232,7 @@ contract TriggerDefaultTests is TestBase {
         assertEq(remainingLosses, 1_000_048);
         assertEq(platformFees,    20 + 3);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               0);
         assertEq(loanManager.assetsUnderManagement(),      0);
@@ -3253,7 +3253,7 @@ contract TriggerDefaultTests is TestBase {
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(loan));
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -3287,7 +3287,7 @@ contract TriggerDefaultTests is TestBase {
         assertEq(remainingLosses_, 0);
         assertEq(platformFees_,    20 +3);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          48);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_048);
@@ -3313,7 +3313,7 @@ contract TriggerDefaultTests is TestBase {
         // Warp to be late
         vm.warp(START + 11_000);
 
-        assertEq(loanManager.getAccruedInterest(),         80);
+        assertEq(loanManager.accruedInterest(),            80);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_080);
@@ -3336,7 +3336,7 @@ contract TriggerDefaultTests is TestBase {
         assertEq(remainingLosses_, 1_000_088);
         assertEq(platformFees_,    25);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               0);
         assertEq(loanManager.assetsUnderManagement(),      0);
@@ -3354,7 +3354,7 @@ contract TriggerDefaultTests is TestBase {
         MockLoan(loan).__setCollateral(1_000_000);
         collateralAsset.mint(loan, 1_000_000);
 
-        assertEq(loanManager.getAccruedInterest(),         80);
+        assertEq(loanManager.accruedInterest(),            80);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_080);
@@ -3377,7 +3377,7 @@ contract TriggerDefaultTests is TestBase {
         assertEq(remainingLosses_, 0);
         assertEq(platformFees_,    25);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          80);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_080);
@@ -3409,7 +3409,7 @@ contract TriggerDefaultTests is TestBase {
         // Warp to be late
         vm.warp(START + 11_000);
 
-        assertEq(loanManager.getAccruedInterest(),         80);
+        assertEq(loanManager.accruedInterest(),            80);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               1_000_000);
         assertEq(loanManager.assetsUnderManagement(),      1_000_080);
@@ -3433,7 +3433,7 @@ contract TriggerDefaultTests is TestBase {
         assertEq(remainingLosses_, 900_113);
         assertEq(platformFees_,    0);
 
-        assertEq(loanManager.getAccruedInterest(),         0);
+        assertEq(loanManager.accruedInterest(),            0);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.principalOut(),               0);
         assertEq(loanManager.assetsUnderManagement(),      0);
@@ -3851,7 +3851,7 @@ contract LoanManagerSortingTests is TestBase {
         assertEq(previous, 0);
         assertEq(next,     0);
 
-        loanManager.removePaymentFromList(2);
+        loanManager.__removePaymentFromList(2);
 
         assertEq(loanManager.paymentCounter(),             1);
         assertEq(loanManager.paymentWithEarliestDueDate(), 1);
@@ -3878,7 +3878,7 @@ contract LoanManagerSortingTests is TestBase {
         assertEq(previous, 0);
         assertEq(next,     0);
 
-        loanManager.removePaymentFromList(1);
+        loanManager.__removePaymentFromList(1);
 
         assertEq(loanManager.paymentCounter(),             1);
         assertEq(loanManager.paymentWithEarliestDueDate(), 0);
@@ -3906,7 +3906,7 @@ contract LoanManagerSortingTests is TestBase {
         assertEq(previous, 1);
         assertEq(next,     0);
 
-        loanManager.removePaymentFromList(1);
+        loanManager.__removePaymentFromList(1);
 
         assertEq(loanManager.paymentCounter(),             2);
         assertEq(loanManager.paymentWithEarliestDueDate(), 2);
@@ -3945,7 +3945,7 @@ contract LoanManagerSortingTests is TestBase {
         assertEq(previous, 2);
         assertEq(next,     0);
 
-        loanManager.removePaymentFromList(1);
+        loanManager.__removePaymentFromList(1);
 
         assertEq(loanManager.paymentCounter(),             3);
         assertEq(loanManager.paymentWithEarliestDueDate(), 2);
@@ -3989,7 +3989,7 @@ contract LoanManagerSortingTests is TestBase {
         assertEq(previous, 2);
         assertEq(next,     0);
 
-        loanManager.removePaymentFromList(2);
+        loanManager.__removePaymentFromList(2);
 
         assertEq(loanManager.paymentCounter(),             3);
         assertEq(loanManager.paymentWithEarliestDueDate(), 1);
@@ -4033,7 +4033,7 @@ contract LoanManagerSortingTests is TestBase {
         assertEq(previous, 2);
         assertEq(next,     0);
 
-        loanManager.removePaymentFromList(3);
+        loanManager.__removePaymentFromList(3);
 
         assertEq(loanManager.paymentCounter(),             3);
         assertEq(loanManager.paymentWithEarliestDueDate(), 1);
@@ -4346,27 +4346,27 @@ contract GetterTests is TestBase {
         loanManager.__setAccountedInterest(10_000e6);
     }
 
-    function test_getAccruedInterest() external {
+    function test_accruedInterest() external {
         // At the start accrued interest is zero.
-        assertEq(loanManager.getAccruedInterest(), 0);
+        assertEq(loanManager.accruedInterest(), 0);
 
         vm.warp(START + 1_000);
-        assertEq(loanManager.getAccruedInterest(), 100);
+        assertEq(loanManager.accruedInterest(), 100);
 
         vm.warp(START + 22_222);
-        assertEq(loanManager.getAccruedInterest(), 2222);
+        assertEq(loanManager.accruedInterest(), 2222);
 
         vm.warp(START + 888_888);
-        assertEq(loanManager.getAccruedInterest(), 88888);
+        assertEq(loanManager.accruedInterest(), 88888);
 
         vm.warp(START + 1_000_000);
-        assertEq(loanManager.getAccruedInterest(), 100_000);
+        assertEq(loanManager.accruedInterest(), 100_000);
 
         vm.warp(START + 1_000_000 + 1);
-        assertEq(loanManager.getAccruedInterest(), 100_000);
+        assertEq(loanManager.accruedInterest(), 100_000);
 
         vm.warp(START + 2_000_000);
-        assertEq(loanManager.getAccruedInterest(), 100_000);
+        assertEq(loanManager.accruedInterest(), 100_000);
     }
 
     function test_getAssetsUnderManagement() external {
@@ -4394,22 +4394,60 @@ contract GetterTests is TestBase {
 
 }
 
-contract DisburseLiquidationFundsTests is TestBase {
+contract DistributeLiquidationFundsTests is TestBase {
 
-    function test_disburseLiquidationFunds_mapleTreasuryNotSet() external {
-        globals.setMapleTreasury(address(0));
-
+    function test_distributeLiquidationFunds_borrowerNotSet() external {
         MockLoan loan = new MockLoan(address(collateralAsset), address(fundsAsset));
+
+        loan.__setBorrower(address(0));
 
         fundsAsset.mint(address(loanManager), 300);
 
-        vm.expectRevert("LM:DLF:ZERO_MT");
-        loanManager.disburseLiquidationFunds(address(loan), 100, 100, 100);
+        vm.expectRevert("LM:DLF:TRANSFER_B");
+        loanManager.__disburseLiquidationFunds(address(loan), 100, 100, 100);
+    }
+
+    function test_distributeLiquidationFunds_poolNotSet() external {
+        MockLoan loan = new MockLoan(address(collateralAsset), address(fundsAsset));
+
+        loan.__setBorrower(borrower);
+        poolManager.__setPool(address(0));
+
+        fundsAsset.mint(address(loanManager), 300);
+
+        vm.expectRevert("LM:DLF:TRANSFER_P");
+        loanManager.__disburseLiquidationFunds(address(loan), 100, 100, 100);
+    }
+
+    function test_distributeLiquidationFunds_mapleTreasuryNotSet() external {
+        MockLoan loan = new MockLoan(address(collateralAsset), address(fundsAsset));
+
+        loan.__setBorrower(borrower);
+        globals.setMapleTreasury(address(0));
+
+        fundsAsset.mint(address(loanManager), 300);
+
+        vm.expectRevert("LM:DLF:TRANSFER_MT");
+        loanManager.__disburseLiquidationFunds(address(loan), 100, 100, 100);
     }
 
 }
 
 contract DistributeClaimedFunds is TestBase {
+
+    function test_distributeLiquidationFunds_poolNotSet() external {
+        MockLoan loan = new MockLoan(address(collateralAsset), address(fundsAsset));
+
+        fundsAsset.mint(address(loanManager), 200);
+
+        // Queue next payment to add loan to
+        loanManager.__queueNextPayment(address(loan), START, START + 100);
+
+        poolManager.__setPool(address(0));
+
+        vm.expectRevert("LM:DCF:TRANSFER_P");
+        loanManager.__distributeClaimedFunds(address(loan), 100, 100);
+    }
 
     function test_distributeClaimedFunds_mapleTreasuryNotSet() external {
         globals.setMapleTreasury(address(0));
@@ -4421,8 +4459,8 @@ contract DistributeClaimedFunds is TestBase {
         // Queue next payment to add loan to
         loanManager.__queueNextPayment(address(loan), START, START + 100);
 
-        vm.expectRevert("LM:DCF:ZERO_MT");
-        loanManager.distributeClaimedFunds(address(loan), 100, 100);
+        vm.expectRevert("LM:DCF:TRANSFER_MT");
+        loanManager.__distributeClaimedFunds(address(loan), 100, 100);
     }
 
 }

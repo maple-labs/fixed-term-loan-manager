@@ -139,7 +139,7 @@ contract ClaimTestBase is TestBase {
     )
         internal
     {
-        assertEq(loanManager.getAccruedInterest(),    accruedInterest);
+        assertEq(loanManager.accruedInterest(),       accruedInterest);
         assertEq(loanManager.accountedInterest(),     accountedInterest);
         assertEq(loanManager.principalOut(),          principalOut);
         assertEq(loanManager.assetsUnderManagement(), assetsUnderManagement);
