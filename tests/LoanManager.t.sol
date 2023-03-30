@@ -3524,6 +3524,14 @@ contract FundLoanTests is TestBase {
         assertEq(loanManager.domainStart(),       START);
     }
 
+    function test_fund_paused() external {
+        globals.__setProtocolPaused(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:PAUSED");
+        loanManager.fund(address(loan));
+    }
+
     function test_fund_failIfNotPoolDelegate() external {
         address notPoolDelegate = address(new Address());
 

@@ -118,8 +118,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     function acceptNewTerms(
         address loan_,
         address refinancer_,
-        uint256 deadline_, bytes[]
-        calldata calls_,
+        uint256 deadline_,
+        bytes[] calldata calls_,
         uint256 principalIncrease_
     )
         external override nonReentrant
@@ -130,6 +130,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         _advanceGlobalPaymentAccounting();
 
+        // NOTE: Verification that the loan payment exists is done in `_handlePreviousPaymentAccounting()`.
         uint256 previousRate_      = _handlePreviousPaymentAccounting(loan_);
         uint256 previousPrincipal_ = IMapleLoanLike(loan_).principal();
 
@@ -150,6 +151,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function fund(address loan_) external override nonReentrant {
+        _requireProtocolNotPaused();
+
         require(msg.sender == poolDelegate(), "LM:F:NOT_PD");
 
         address           factory_ = IMapleLoanLike(loan_).factory();
@@ -208,6 +211,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
             emit PrincipalOutUpdated(principalOut -= _uint128(principal_));
         }
 
+        // NOTE: Verification that the loan payment exists is done in `_handlePreviousPaymentAccounting()`.
         // 4. Update the accounting based on the payment that was just made.
         uint256 previousRate_ = _handlePreviousPaymentAccounting(msg.sender);
 
