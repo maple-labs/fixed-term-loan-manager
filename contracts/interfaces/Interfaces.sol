@@ -102,6 +102,16 @@ interface IMapleLoanLike {
 
 }
 
+interface IMapleProxyFactoryLike {
+
+    function createInstance(bytes calldata arguments_, bytes32 salt_) external returns (address instance_);
+
+    function mapleGlobals() external view returns (address mapleGlobals_);
+
+    function upgradeInstance(uint256 toVersion_, bytes calldata arguments_) external;
+
+}
+
 interface IPoolManagerLike {
 
     function asset() external view returns (address asset_);

@@ -2,7 +2,6 @@
 pragma solidity 0.8.7;
 
 import { ERC20Helper }           from "../modules/erc20-helper/src/ERC20Helper.sol";
-import { IMapleProxyFactory }    from "../modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 import { MapleProxiedInternals } from "../modules/maple-proxy-factory/contracts/MapleProxiedInternals.sol";
 
 import { ILoanManager } from "./interfaces/ILoanManager.sol";
@@ -13,6 +12,7 @@ import {
     ILoanFactoryLike,
     IMapleGlobalsLike,
     IMapleLoanLike,
+    IMapleProxyFactoryLike,
     IPoolManagerLike
 } from "./interfaces/Interfaces.sol";
 
@@ -73,7 +73,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
             require(msg.sender == governor(), "LM:U:NO_AUTH");
         }
 
-        IMapleProxyFactory(_factory()).upgradeInstance(version_, arguments_);
+        IMapleProxyFactoryLike(_factory()).upgradeInstance(version_, arguments_);
     }
 
     /**************************************************************************************************************************************/
@@ -587,7 +587,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         address collateralAsset_ = IMapleLoanLike(loan_).collateralAsset();
         uint256 collateral_      = IERC20Like(collateralAsset_).balanceOf(loan_);
 
-        liquidator_ = IMapleProxyFactory(liquidatorFactory_).createInstance(
+        liquidator_ = IMapleProxyFactoryLike(liquidatorFactory_).createInstance(
             abi.encode(address(this), collateralAsset_, fundsAsset), bytes32(bytes20(address(loan_)))
         );
 
@@ -979,7 +979,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /**************************************************************************************************************************************/
 
     function _globals() internal view returns (address globals_) {
-        globals_ = IMapleProxyFactory(_factory()).mapleGlobals();
+        globals_ = IMapleProxyFactoryLike(_factory()).mapleGlobals();
     }
 
     function _pool() internal view returns (address pool_) {
