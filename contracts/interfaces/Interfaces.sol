@@ -96,8 +96,6 @@ interface IMapleLoanLike {
 
     function repossess(address destination_) external returns (uint256 collateralRepossessed_, uint256 fundsRepossessed_);
 
-    function setPendingLender(address pendingLender_) external;
-
     function impairLoan() external;
 
 }
