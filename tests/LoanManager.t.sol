@@ -57,7 +57,7 @@ contract TestBase is TestUtils {
         poolManager       = new MockPoolManager();
 
         globals.setMapleTreasury(treasury);
-        globals.__setIsFactory(true);
+        globals.__setIsInstanceOf(true);
         globals.__setIsBorrower(true);
 
         loanFactory.__setIsLoan(true);
@@ -3541,7 +3541,7 @@ contract FundLoanTests is TestBase {
     }
 
     function test_fund_invalidFactory() public {
-        globals.__setIsFactory(false);
+        globals.__setIsInstanceOf(false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("LM:F:INVALID_LOAN_FACTORY");

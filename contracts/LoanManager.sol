@@ -158,7 +158,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         address           factory_ = IMapleLoanLike(loan_).factory();
         IMapleGlobalsLike globals_ = IMapleGlobalsLike(_globals());
 
-        require(globals_.isFactory("FT_LOAN", factory_),               "LM:F:INVALID_LOAN_FACTORY");
+        require(globals_.isInstanceOf("FT_LOAN_FACTORY", factory_),    "LM:F:INVALID_LOAN_FACTORY");
         require(ILoanFactoryLike(factory_).isLoan(loan_),              "LM:F:INVALID_LOAN_INSTANCE");
         require(globals_.isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INVALID_BORROWER");
         require(IMapleLoanLike(loan_).paymentsRemaining() != 0,        "LM:F:LOAN_NOT_ACTIVE");

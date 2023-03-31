@@ -35,6 +35,8 @@ interface IMapleGlobalsLike {
 
     function isFactory(bytes32 factoryId_, address factory_) external view returns (bool isValid_);
 
+    function isInstanceOf(bytes32 instanceId, address instance_) external view returns (bool isInstance_);
+
     function isPoolDeployer(address poolDeployer_) external view returns (bool isPoolDeployer_);
 
     function isValidScheduledCall(address caller_, address contract_, bytes32 functionId_, bytes calldata callData_)

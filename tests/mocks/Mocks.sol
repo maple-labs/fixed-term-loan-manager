@@ -8,6 +8,7 @@ import { LoanManagerStorage } from "../../contracts/proxy/LoanManagerStorage.sol
 contract MockGlobals {
 
     bool internal _isFactory;
+    bool internal _isInstance;
     bool internal _isValidScheduledCall;
     bool internal _isBorrower;
 
@@ -33,6 +34,10 @@ contract MockGlobals {
         isFactory_ = _isFactory;
     }
 
+    function isInstanceOf(bytes32, address) external view returns (bool isInstance_) {
+        isInstance_ = _isInstance;
+    }
+
     function isValidScheduledCall(address, address, bytes32, bytes calldata) external view returns (bool isValid_) {
         isValid_ = _isValidScheduledCall;
     }
@@ -43,6 +48,10 @@ contract MockGlobals {
 
     function __setIsFactory(bool isFactory_) external {
         _isFactory = isFactory_;
+    }
+
+    function __setIsInstanceOf(bool isInstance_) external {
+        _isInstance = isInstance_;
     }
 
     function __setIsValidScheduledCall(bool isValid_) external {
