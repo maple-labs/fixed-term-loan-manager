@@ -196,7 +196,7 @@ contract UpgradeTests is TestBase {
 contract SetAllowedSlippage_SetterTests is TestBase {
 
     function test_setAllowedSlippage_paused() external {
-        globals.__setProtocolPaused(true);
+        globals.__setFunctionPaused(true);
 
         vm.expectRevert("LM:PAUSED");
         loanManager.setAllowedSlippage(address(collateralAsset), 0);
@@ -232,7 +232,7 @@ contract SetAllowedSlippage_SetterTests is TestBase {
 contract SetMinRatio_SetterTests is TestBase {
 
     function test_setMinRatio_paused() external {
-        globals.__setProtocolPaused(true);
+        globals.__setFunctionPaused(true);
 
         vm.expectRevert("LM:PAUSED");
         loanManager.setMinRatio(address(collateralAsset), 0);
@@ -539,7 +539,7 @@ contract ImpairLoanTests is TestBase {
     }
 
     function test_impairLoan_failIfPaused() external {
-        globals.__setProtocolPaused(true);
+        globals.__setFunctionPaused(true);
 
         vm.prank(poolDelegate);
         vm.expectRevert("LM:PAUSED");
@@ -757,7 +757,7 @@ contract RemoveLoanImpairmentTests is TestBase {
     }
 
     function test_removeLoanImpairment_failIfPaused() external {
-        globals.__setProtocolPaused(true);
+        globals.__setFunctionPaused(true);
 
         vm.prank(poolDelegate);
         vm.expectRevert("LM:PAUSED");
@@ -3525,7 +3525,7 @@ contract FundLoanTests is TestBase {
     }
 
     function test_fund_paused() external {
-        globals.__setProtocolPaused(true);
+        globals.__setFunctionPaused(true);
 
         vm.prank(poolDelegate);
         vm.expectRevert("LM:PAUSED");
@@ -4240,7 +4240,7 @@ contract UpdateAccountingTests is ClaimTestBase {
     }
 
     function test_updateAccounting_failIfPaused() external {
-        globals.__setProtocolPaused(true);
+        globals.__setFunctionPaused(true);
 
         vm.prank(poolDelegate);
         vm.expectRevert("LM:PAUSED");

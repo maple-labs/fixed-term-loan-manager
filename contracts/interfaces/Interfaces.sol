@@ -35,6 +35,8 @@ interface IMapleGlobalsLike {
 
     function isFactory(bytes32 factoryId_, address factory_) external view returns (bool isValid_);
 
+    function isFunctionPaused(bytes4 sig_) external view returns (bool isFunctionPaused_);
+
     function isInstanceOf(bytes32 instanceId, address instance_) external view returns (bool isInstance_);
 
     function isPoolDeployer(address poolDeployer_) external view returns (bool isPoolDeployer_);
@@ -45,8 +47,6 @@ interface IMapleGlobalsLike {
     function platformManagementFeeRate(address poolManager_) external view returns (uint256 platformManagementFeeRate_);
 
     function mapleTreasury() external view returns (address mapleTreasury_);
-
-    function protocolPaused() external view returns (bool protocolPaused_);
 
     function unscheduleCall(address caller_, bytes32 functionId_, bytes calldata callData_) external;
 

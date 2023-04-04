@@ -987,7 +987,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function _requireProtocolNotPaused() internal view {
-        require(!IMapleGlobalsLike(_globals()).protocolPaused(), "LM:PAUSED");
+        require(!IMapleGlobalsLike(_globals()).isFunctionPaused(msg.sig), "LM:PAUSED");
     }
 
     function _treasury() internal view returns (address treasury_) {

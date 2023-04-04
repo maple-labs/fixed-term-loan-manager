@@ -18,9 +18,9 @@ contract CreateInstanceTests is Test {
     address asset        = makeAddr("asset");
     address poolDeployer = makeAddr("poolDeployer");
 
+    MockFactory     poolManagerFactory;
     MockGlobals     globals;
     MockPoolManager poolManager;
-    MockFactory     poolManagerFactory;
 
     LoanManagerFactory factory;
 

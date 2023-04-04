@@ -7,10 +7,11 @@ import { LoanManagerStorage } from "../../contracts/proxy/LoanManagerStorage.sol
 
 contract MockGlobals {
 
+    bool internal _isBorrower;
     bool internal _isFactory;
+    bool internal _isFunctionPaused;
     bool internal _isInstance;
     bool internal _isValidScheduledCall;
-    bool internal _isBorrower;
 
     address public governor;
     address public mapleTreasury;
@@ -32,6 +33,10 @@ contract MockGlobals {
 
     function isFactory(bytes32, address) external view returns (bool isFactory_) {
         isFactory_ = _isFactory;
+    }
+
+    function isFunctionPaused(bytes4) external view returns (bool isFunctionPaused_) {
+        isFunctionPaused_ = _isFunctionPaused;
     }
 
     function isInstanceOf(bytes32, address) external view returns (bool isInstance_) {
@@ -75,6 +80,10 @@ contract MockGlobals {
     }
 
     function unscheduleCall(address, bytes32, bytes calldata) external {}
+
+    function __setFunctionPaused(bool paused_) external {
+        _isFunctionPaused = paused_;
+    }
 
 }
 
