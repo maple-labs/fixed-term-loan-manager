@@ -8,7 +8,6 @@ import { LoanManagerStorage } from "../../contracts/proxy/LoanManagerStorage.sol
 contract MockGlobals {
 
     bool internal _isBorrower;
-    bool internal _isFactory;
     bool internal _isFunctionPaused;
     bool internal _isInstance;
     bool internal _isValidScheduledCall;
@@ -31,10 +30,6 @@ contract MockGlobals {
         isBorrower_ = _isBorrower;
     }
 
-    function isFactory(bytes32, address) external view returns (bool isFactory_) {
-        isFactory_ = _isFactory;
-    }
-
     function isFunctionPaused(bytes4) external view returns (bool isFunctionPaused_) {
         isFunctionPaused_ = _isFunctionPaused;
     }
@@ -47,12 +42,22 @@ contract MockGlobals {
         isValid_ = _isValidScheduledCall;
     }
 
-    function __setIsBorrower(bool isBorrower_) external {
-        _isBorrower = isBorrower_;
+    function setMapleTreasury(address treasury_) external {
+        mapleTreasury = treasury_;
     }
 
-    function __setIsFactory(bool isFactory_) external {
-        _isFactory = isFactory_;
+    function setPlatformManagementFeeRate(address poolManager_, uint256 platformManagementFeeRate_) external {
+        platformManagementFeeRate[poolManager_] = platformManagementFeeRate_;
+    }
+
+    function setValidPoolDeployer(address poolDeployer_, bool isValid_) external {
+        isPoolDeployer[poolDeployer_] = isValid_;
+    }
+
+    function unscheduleCall(address, bytes32, bytes calldata) external {}
+
+    function __setIsBorrower(bool isBorrower_) external {
+        _isBorrower = isBorrower_;
     }
 
     function __setIsInstanceOf(bool isInstance_) external {
@@ -63,26 +68,12 @@ contract MockGlobals {
         _isValidScheduledCall = isValid_;
     }
 
-    function __setProtocolPaused(bool paused_) external {
-        protocolPaused = paused_;
-    }
-
-    function setPlatformManagementFeeRate(address poolManager_, uint256 platformManagementFeeRate_) external {
-        platformManagementFeeRate[poolManager_] = platformManagementFeeRate_;
-    }
-
-    function setMapleTreasury(address treasury_) external {
-        mapleTreasury = treasury_;
-    }
-
-    function setValidPoolDeployer(address poolDeployer_, bool isValid_) external {
-        isPoolDeployer[poolDeployer_] = isValid_;
-    }
-
-    function unscheduleCall(address, bytes32, bytes calldata) external {}
-
     function __setFunctionPaused(bool paused_) external {
         _isFunctionPaused = paused_;
+    }
+
+    function __setProtocolPaused(bool paused_) external {
+        protocolPaused = paused_;
     }
 
 }
@@ -301,11 +292,11 @@ contract MockPoolManager {
         hasSufficientCover_ = true;
     }
 
+    function requestFunds(address destination_, uint256 principal_) external {}
+
     function setDelegateManagementFeeRate(uint256 delegateManagementFeeRate_) external {
         delegateManagementFeeRate = delegateManagementFeeRate_;
     }
-
-    function requestFunds(address destination_, uint256 principal_) external {}
 
     function __setAsset(address asset_) external {
         asset = asset_;

@@ -33,8 +33,6 @@ interface IMapleGlobalsLike {
 
     function isBorrower(address borrower_) external view returns (bool isBorrower_);
 
-    function isFactory(bytes32 factoryId_, address factory_) external view returns (bool isValid_);
-
     function isFunctionPaused(bytes4 sig_) external view returns (bool isFunctionPaused_);
 
     function isInstanceOf(bytes32 instanceId, address instance_) external view returns (bool isInstance_);
