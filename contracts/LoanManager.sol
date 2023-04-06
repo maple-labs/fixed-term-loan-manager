@@ -70,7 +70,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
             globals_.unscheduleCall(msg.sender, "LM:UPGRADE", msg.data);
         } else {
-            require(msg.sender == governor(), "LM:U:NO_AUTH");
+            require(msg.sender == globals_.securityAdmin(), "LM:U:NO_AUTH");
         }
 
         IMapleProxyFactoryLike(_factory()).upgradeInstance(version_, arguments_);

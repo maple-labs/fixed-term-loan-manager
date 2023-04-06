@@ -147,9 +147,12 @@ contract SetImplementationTests is TestBase {
 contract UpgradeTests is TestBase {
 
     address newImplementation = address(new LoanManagerHarness());
+    address securityAdmin     = address(new Address());
 
     function setUp() public override {
         super.setUp();
+
+        globals.__setSecurityAdmin(securityAdmin);
 
         vm.startPrank(governor);
         factory.registerImplementation(2, newImplementation, address(0));
@@ -157,7 +160,7 @@ contract UpgradeTests is TestBase {
         vm.stopPrank();
     }
 
-    function test_upgrade_notPoolDelegate() external {
+    function test_upgrade_noAuth() external {
         vm.expectRevert("LM:U:NO_AUTH");
         loanManager.upgrade(2, "");
     }
@@ -175,16 +178,17 @@ contract UpgradeTests is TestBase {
         loanManager.upgrade(2, "1");
     }
 
-    function test_upgrade_successWithGovernor() external {
+    function test_upgrade_success_asSecurityAdmin() external {
         // No need to schedule call
-        vm.prank(governor);
+        vm.prank(securityAdmin);
         loanManager.upgrade(2, "");
 
         assertEq(loanManager.implementation(), newImplementation);
     }
 
-    function test_upgrade_success() external {
+    function test_upgrade_success_asPoolDelegate() external {
         globals.__setIsValidScheduledCall(true);
+
         vm.prank(poolManager.poolDelegate());
         loanManager.upgrade(2, "");
 
