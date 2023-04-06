@@ -102,6 +102,13 @@ contract MigrateTests is TestBase {
 
     address migrator = address(new MockLoanManagerMigrator());
 
+    function test_migrate_paused() external {
+        globals.__setFunctionPaused(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.migrate(migrator, "");
+    }
+
     function test_migrate_notFactory() external {
         vm.expectRevert("LM:M:NOT_FACTORY");
         loanManager.migrate(migrator, "");
@@ -127,6 +134,13 @@ contract MigrateTests is TestBase {
 contract SetImplementationTests is TestBase {
 
     address newImplementation = address(new LoanManagerHarness());
+
+    function test_setImplementation_paused() external {
+        globals.__setFunctionPaused(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.setImplementation(newImplementation);
+    }
 
     function test_setImplementation_notFactory() external {
         vm.expectRevert("LM:SI:NOT_FACTORY");
@@ -160,6 +174,13 @@ contract UpgradeTests is TestBase {
         vm.stopPrank();
     }
 
+    function test_upgrade_paused() external {
+        globals.__setFunctionPaused(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.upgrade(2, "");
+    }
+
     function test_upgrade_noAuth() external {
         vm.expectRevert("LM:U:NO_AUTH");
         loanManager.upgrade(2, "");
@@ -167,7 +188,7 @@ contract UpgradeTests is TestBase {
 
     function test_upgrade_notScheduled() external {
         vm.prank(poolManager.poolDelegate());
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         loanManager.upgrade(2, "");
     }
 
@@ -213,7 +234,7 @@ contract SetAllowedSlippage_SetterTests is TestBase {
 
     function test_setAllowedSlippage_invalidSlippage() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:SAS:INVALID_SLIPPAGE");
+        vm.expectRevert("LM:SAS:INV_SLIPPAGE");
         loanManager.setAllowedSlippage(address(collateralAsset), 1e6 + 1);
     }
 
@@ -3540,7 +3561,7 @@ contract FundLoanTests is TestBase {
         address notPoolDelegate = address(new Address());
 
         vm.prank(notPoolDelegate);
-        vm.expectRevert("LM:F:NOT_PD");
+        vm.expectRevert("LM:NOT_PD");
         loanManager.fund(address(loan));
     }
 
@@ -3548,7 +3569,7 @@ contract FundLoanTests is TestBase {
         globals.__setIsInstanceOf(false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:F:INVALID_LOAN_FACTORY");
+        vm.expectRevert("LM:F:INV_LOAN_FACTORY");
         loanManager.fund(address(loan));
     }
 
@@ -3556,7 +3577,7 @@ contract FundLoanTests is TestBase {
         loanFactory.__setIsLoan(false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:F:INVALID_LOAN_INSTANCE");
+        vm.expectRevert("LM:F:INV_LOAN_INSTANCE");
         loanManager.fund(address(loan));
     }
 
@@ -3564,7 +3585,7 @@ contract FundLoanTests is TestBase {
         globals.__setIsBorrower(false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:F:INVALID_BORROWER");
+        vm.expectRevert("LM:F:INV_BORROWER");
         loanManager.fund(address(loan));
     }
 
@@ -3572,7 +3593,7 @@ contract FundLoanTests is TestBase {
         loan.__setPaymentsRemaining(0);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:F:LOAN_NOT_ACTIVE");
+        vm.expectRevert("LM:F:LOAN_INACTIVE");
         loanManager.fund(address(loan));
     }
 
@@ -4484,7 +4505,7 @@ contract RejectNewTermsTests is TestBase {
     }
 
     function test_rejectNewTerms_notPoolDelegate() external {
-        vm.expectRevert("LM:RNT:NOT_PD");
+        vm.expectRevert("LM:NOT_PD");
         loanManager.rejectNewTerms(address(0), address(0), 0, new bytes[](0));
     }
 

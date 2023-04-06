@@ -53,20 +53,27 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /**************************************************************************************************************************************/
 
     function migrate(address migrator_, bytes calldata arguments_) external override {
+        _requireProtocolNotPaused();
+
         require(msg.sender == _factory(),        "LM:M:NOT_FACTORY");
         require(_migrate(migrator_, arguments_), "LM:M:FAILED");
     }
 
     function setImplementation(address implementation_) external override {
+        _requireProtocolNotPaused();
+
         require(msg.sender == _factory(), "LM:SI:NOT_FACTORY");
+
         _setImplementation(implementation_);
     }
 
     function upgrade(uint256 version_, bytes calldata arguments_) external override {
+        _requireProtocolNotPaused();
+
         IMapleGlobalsLike globals_ = IMapleGlobalsLike(_globals());
 
         if (msg.sender == poolDelegate()) {
-            require(globals_.isValidScheduledCall(msg.sender, address(this), "LM:UPGRADE", msg.data), "LM:U:INVALID_SCHED_CALL");
+            require(globals_.isValidScheduledCall(msg.sender, address(this), "LM:UPGRADE", msg.data), "LM:U:INV_SCHED_CALL");
 
             globals_.unscheduleCall(msg.sender, "LM:UPGRADE", msg.data);
         } else {
@@ -86,7 +93,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         _requireProtocolNotPaused();
 
         require(msg.sender == poolDelegate() || msg.sender == governor(), "LM:SAS:NO_AUTH");
-        require(allowedSlippage_ <= HUNDRED_PERCENT,                      "LM:SAS:INVALID_SLIPPAGE");
+        require(allowedSlippage_ <= HUNDRED_PERCENT,                      "LM:SAS:INV_SLIPPAGE");
 
         emit AllowedSlippageSet(collateralAsset_, allowedSlippageFor[collateralAsset_] = allowedSlippage_);
     }
@@ -127,8 +134,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         external override nonReentrant
     {
         _requireProtocolNotPaused();
-
-        require(msg.sender == poolDelegate(), "LM:ANT:NOT_PD");
+        _requireCallerIsPoolDelegate();
 
         _advanceGlobalPaymentAccounting();
 
@@ -154,16 +160,15 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
     function fund(address loan_) external override nonReentrant {
         _requireProtocolNotPaused();
-
-        require(msg.sender == poolDelegate(), "LM:F:NOT_PD");
+        _requireCallerIsPoolDelegate();
 
         address           factory_ = IMapleLoanLike(loan_).factory();
         IMapleGlobalsLike globals_ = IMapleGlobalsLike(_globals());
 
-        require(globals_.isInstanceOf("FT_LOAN_FACTORY", factory_),    "LM:F:INVALID_LOAN_FACTORY");
-        require(ILoanFactoryLike(factory_).isLoan(loan_),              "LM:F:INVALID_LOAN_INSTANCE");
-        require(globals_.isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INVALID_BORROWER");
-        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,        "LM:F:LOAN_NOT_ACTIVE");
+        require(globals_.isInstanceOf("FT_LOAN_FACTORY", factory_),    "LM:F:INV_LOAN_FACTORY");
+        require(ILoanFactoryLike(factory_).isLoan(loan_),              "LM:F:INV_LOAN_INSTANCE");
+        require(globals_.isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INV_BORROWER");
+        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,        "LM:F:LOAN_INACTIVE");
 
         uint256 principal_ = IMapleLoanLike(loan_).principalRequested();
 
@@ -183,7 +188,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function rejectNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external override {
-        require(msg.sender == poolDelegate(), "LM:RNT:NOT_PD");
+        _requireCallerIsPoolDelegate();
 
         IMapleLoanLike(loan_).rejectNewTerms(refinancer_, deadline_, calls_);
     }
@@ -436,7 +441,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         if (IERC20Like(collateralAsset_ ).balanceOf(loan_) == 0 || collateralAsset_ == fundsAsset) {
             ( remainingLosses_, platformFees_ ) = _handleNonLiquidatingRepossession(loan_, platformFees_, netInterest_, netLateInterest_);
-            return (true, remainingLosses_, platformFees_);
+            return ( true, remainingLosses_, platformFees_ );
         }
 
         ( address liquidator_, uint256 principal_ ) = _handleLiquidatingRepossession(loan_, liquidatorFactory_, netInterest_);
@@ -990,6 +995,10 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
     function _requireProtocolNotPaused() internal view {
         require(!IMapleGlobalsLike(_globals()).isFunctionPaused(msg.sig), "LM:PAUSED");
+    }
+
+    function _requireCallerIsPoolDelegate() internal view {
+        require(msg.sender == poolDelegate(), "LM:NOT_PD");
     }
 
     function _treasury() internal view returns (address treasury_) {
