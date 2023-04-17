@@ -188,6 +188,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function rejectNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external override {
+        _requireProtocolNotPaused();
         _requireCallerIsPoolDelegate();
 
         IMapleLoanLike(loan_).rejectNewTerms(refinancer_, deadline_, calls_);
@@ -205,6 +206,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     )
         external override nonReentrant
     {
+        _requireProtocolNotPaused();
+
         // 1. Advance the global accounting.
         //    - Update `domainStart` to the current `block.timestamp`.
         //    - Update `accountedInterest` to account all accrued interest since last update.
@@ -376,6 +379,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     function finishCollateralLiquidation(address loan_)
         external override nonReentrant returns (uint256 remainingLosses_, uint256 platformFees_)
     {
+        _requireProtocolNotPaused();
+
         require(msg.sender == poolManager,   "LM:FCL:NOT_PM");
         require(!isLiquidationActive(loan_), "LM:FCL:LIQ_ACTIVE");
 
@@ -416,6 +421,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     function triggerDefault(address loan_, address liquidatorFactory_)
         external override returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_)
     {
+        _requireProtocolNotPaused();
+
         require(msg.sender == poolManager, "LM:TD:NOT_PM");
 
         uint256 paymentId_ = paymentIdOf[loan_];

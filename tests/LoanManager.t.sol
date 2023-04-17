@@ -415,6 +415,13 @@ contract ClaimTests is ClaimTestBase {
         loanManager.fund(address(loan));
     }
 
+    function test_claim_paused() external {
+        globals.__setFunctionPaused(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.claim(0, 100, 0, START + 10_000);
+    }
+
     function test_claim_notLoan() external {
         fundsAsset.mint(address(loanManager), 100);
 
@@ -448,6 +455,13 @@ contract FinishCollateralLiquidationTests is TestBase {
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
+    }
+
+    function test_finishCollateralLiquidation_paused() public {
+        globals.__setFunctionPaused(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.finishCollateralLiquidation(address(loan));
     }
 
     function test_finishCollateralLiquidation_notManager() public {
@@ -3203,6 +3217,13 @@ contract TriggerDefaultTests is TestBase {
         loanManager.fund(address(loan));
     }
 
+    function test_triggerDefault_paused() public {
+        globals.__setFunctionPaused(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.triggerDefault(address(loan), address(liquidatorFactory));
+    }
+
     function test_triggerDefault_notManager() public {
         // NOTE: The next two lines of code are unnecessary, as loan.repossess() is mocked,
         // but simulate the real preconditions for this function to be called.
@@ -4502,6 +4523,13 @@ contract RejectNewTermsTests is TestBase {
 
     function setUp() public override {
         super.setUp();
+    }
+
+    function test_rejectNewTerms_paused() external {
+        globals.__setFunctionPaused(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.rejectNewTerms(address(0), address(0), 0, new bytes[](0));
     }
 
     function test_rejectNewTerms_notPoolDelegate() external {
