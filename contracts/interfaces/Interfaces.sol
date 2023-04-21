@@ -57,8 +57,8 @@ interface IMapleLoanLike {
     function acceptLender() external;
 
     function acceptNewTerms(
-        address refinancer_,
-        uint256 deadline_,
+        address          refinancer_,
+        uint256          deadline_,
         bytes[] calldata calls_
     ) external returns (bytes32 refinanceCommitment_);
 
@@ -71,7 +71,7 @@ interface IMapleLoanLike {
     function fundLoan() external returns (uint256 fundsLent_);
 
     function getNextPaymentDetailedBreakdown() external view returns (
-        uint256 principal_,
+        uint256           principal_,
         uint256[3] memory interest_,
         uint256[2] memory fees_
     );
@@ -89,8 +89,8 @@ interface IMapleLoanLike {
     function principalRequested() external view returns (uint256 principal_);
 
     function rejectNewTerms(
-        address refinancer_,
-        uint256 deadline_,
+        address          refinancer_,
+        uint256          deadline_,
         bytes[] calldata calls_
     ) external returns (bytes32 refinanceCommitment_);
 

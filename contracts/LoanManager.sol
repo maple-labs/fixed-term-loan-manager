@@ -32,7 +32,7 @@ import { LoanManagerStorage } from "./proxy/LoanManagerStorage.sol";
 contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage {
 
     uint256 public override constant PRECISION       = 1e30;
-    uint256 public override constant HUNDRED_PERCENT = 1e6;  // 100.0000%
+    uint256 public override constant HUNDRED_PERCENT = 1e6;   // 100.0000%
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -125,11 +125,11 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /**************************************************************************************************************************************/
 
     function acceptNewTerms(
-        address loan_,
-        address refinancer_,
-        uint256 deadline_,
+        address          loan_,
+        address          refinancer_,
+        uint256          deadline_,
         bytes[] calldata calls_,
-        uint256 principalIncrease_
+        uint256          principalIncrease_
     )
         external override nonReentrant
     {
@@ -438,9 +438,9 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         uint256 netInterest_;
         uint256 netLateInterest_;
 
-        bool isImpaired = IMapleLoanLike(loan_).isImpaired();
+        bool isImpaired_ = IMapleLoanLike(loan_).isImpaired();
 
-        ( netInterest_, netLateInterest_, platformFees_ ) = isImpaired
+        ( netInterest_, netLateInterest_, platformFees_ ) = isImpaired_
             ? _getInterestAndFeesFromLiquidationInfo(loan_)
             : _getDefaultInterestAndFees(loan_, paymentInfo_);
 
@@ -453,7 +453,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         ( address liquidator_, uint256 principal_ ) = _handleLiquidatingRepossession(loan_, liquidatorFactory_, netInterest_);
 
-        if (isImpaired) {
+        if (isImpaired_) {
             liquidationInfo[loan_].liquidator = liquidator_;
         } else {
             liquidationInfo[loan_] = LiquidationInfo({
@@ -948,7 +948,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         uint256 collateralAssetDecimals_ = uint256(10) ** uint256(IERC20Like(collateralAsset_).decimals());
 
-        uint256 oracleAmount =
+        uint256 oracleAmount_ =
             swapAmount_
                 * globals_.getLatestPrice(collateralAsset_)                  // Convert from `fromAsset` value.
                 * uint256(10) ** uint256(IERC20Like(fundsAsset).decimals())  // Convert to `toAsset` decimal precision.
@@ -957,9 +957,9 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
                 / collateralAssetDecimals_                                   // Convert from `fromAsset` decimal precision.
                 / HUNDRED_PERCENT;                                           // Divide basis points for slippage.
 
-        uint256 minRatioAmount = (swapAmount_ * minRatioFor[collateralAsset_]) / collateralAssetDecimals_;
+        uint256 minRatioAmount_ = (swapAmount_ * minRatioFor[collateralAsset_]) / collateralAssetDecimals_;
 
-        returnAmount_ = oracleAmount > minRatioAmount ? oracleAmount : minRatioAmount;
+        returnAmount_ = oracleAmount_ > minRatioAmount_ ? oracleAmount_ : minRatioAmount_;
     }
 
     function isLiquidationActive(address loan_) public view override returns (bool isActive_) {

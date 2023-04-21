@@ -63,12 +63,12 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     event PaymentAdded(
         address indexed loan_,
         uint256 indexed paymentId_,
-        uint256 platformManagementFeeRate_,
-        uint256 delegateManagementFeeRate_,
-        uint256 startDate_,
-        uint256 nextPaymentDueDate_,
-        uint256 netRefinanceInterest_,
-        uint256 newRate_
+        uint256         platformManagementFeeRate_,
+        uint256         delegateManagementFeeRate_,
+        uint256         startDate_,
+        uint256         nextPaymentDueDate_,
+        uint256         netRefinanceInterest_,
+        uint256         newRate_
     );
 
     /**
@@ -103,11 +103,11 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
      *  @param principalIncrease_ The increase in principal.
      */
     function acceptNewTerms(
-        address loan_,
-        address refinancer_,
-        uint256 deadline_,
+        address          loan_,
+        address          refinancer_,
+        uint256          deadline_,
         bytes[] calldata calls_,
-        uint256 principalIncrease_
+        uint256          principalIncrease_
     ) external;
 
     /**
