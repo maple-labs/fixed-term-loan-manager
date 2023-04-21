@@ -3540,7 +3540,8 @@ contract FundLoanTests is TestBase {
         assertEq(loanManager.domainEnd(),         0);
         assertEq(loanManager.domainStart(),       0);
 
-        loan.__setPrincipal(principalRequested);  // Simulate intermediate state from funding
+        loan.__setPrincipal(principalRequested);  // Simulate intermediate state from funding.
+        loan.__setUnaccountedAmount(1);           // Add unaccounted funds to the loan.
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));

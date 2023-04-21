@@ -162,20 +162,26 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         _requireProtocolNotPaused();
         _requireCallerIsPoolDelegate();
 
-        address           factory_ = IMapleLoanLike(loan_).factory();
+        ILoanFactoryLike  factory_ = ILoanFactoryLike(IMapleLoanLike(loan_).factory());
         IMapleGlobalsLike globals_ = IMapleGlobalsLike(_globals());
 
-        require(globals_.isInstanceOf("FT_LOAN_FACTORY", factory_),    "LM:F:INV_LOAN_FACTORY");
-        require(ILoanFactoryLike(factory_).isLoan(loan_),              "LM:F:INV_LOAN_INSTANCE");
-        require(globals_.isBorrower(IMapleLoanLike(loan_).borrower()), "LM:F:INV_BORROWER");
-        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,        "LM:F:LOAN_INACTIVE");
-
-        uint256 principal_ = IMapleLoanLike(loan_).principalRequested();
+        require(globals_.isInstanceOf("FT_LOAN_FACTORY", address(factory_)), "LM:F:INV_LOAN_FACTORY");
+        require(factory_.isLoan(loan_),                                      "LM:F:INV_LOAN_INSTANCE");
+        require(globals_.isBorrower(IMapleLoanLike(loan_).borrower()),       "LM:F:INV_BORROWER");
+        require(IMapleLoanLike(loan_).paymentsRemaining() != 0,              "LM:F:LOAN_INACTIVE");
 
         _advanceGlobalPaymentAccounting();
 
-        IPoolManagerLike(poolManager).requestFunds(loan_, principal_);
+        address fundsAsset_  = fundsAsset;
+        address poolManager_ = poolManager;
+        uint256 principal_   = IMapleLoanLike(loan_).principalRequested();
 
+        // Transfer all unaccounted assets from the loan to the pool.
+        if (IMapleLoanLike(loan_).getUnaccountedAmount(fundsAsset_) > 0) {
+            IMapleLoanLike(loan_).skim(fundsAsset_, IPoolManagerLike(poolManager_).pool());
+        }
+
+        IPoolManagerLike(poolManager_).requestFunds(loan_, principal_);
         IMapleLoanLike(loan_).fundLoan();
 
         emit PrincipalOutUpdated(principalOut += _uint128(principal_));

@@ -85,6 +85,8 @@ contract MockGlobals {
 
 contract MockLoan {
 
+    uint256 internal _unaccountedAmount;
+
     address public borrower;
     address public collateralAsset;
     address public factory;
@@ -114,8 +116,6 @@ contract MockLoan {
     uint256 public refinancePaymentInterval;
     uint256 public refinancePrincipal;
     uint256 public refinancePrincipalRequested;
-
-    mapping(address => uint256) public unaccountedAmounts;
 
     constructor(address collateralAsset_, address fundsAsset_) {
         collateralAsset = collateralAsset_;
@@ -159,6 +159,10 @@ contract MockLoan {
         fees_[1] = platformServiceFee;
     }
 
+    function getUnaccountedAmount(address) external view returns (uint256 unaccountedAmount_) {
+        unaccountedAmount_ = _unaccountedAmount;
+    }
+
     function repossess(address destination_) external returns (uint256 collateralRepossessed_, uint256 fundsAssetRepossessed_) {
         collateralRepossessed_ = collateral;
         fundsAssetRepossessed_ = 0;
@@ -191,6 +195,8 @@ contract MockLoan {
         nextPaymentDueDate       = block.timestamp;
         isImpaired               = true;
     }
+
+    function skim(address asset, address destination_) external returns (uint256 skimmed_) {}
 
     function __setBorrower(address borrower_) external {
         borrower = borrower_;
@@ -258,6 +264,10 @@ contract MockLoan {
 
     function __setRefinanceNextPaymentDueDate(uint256 nextPaymentDueDate_) external {
         refinanceNextPaymentDueDate = nextPaymentDueDate_;
+    }
+
+    function __setUnaccountedAmount(uint256 unaccountedAmount_) external {
+        _unaccountedAmount = unaccountedAmount_;
     }
 
 }

@@ -76,6 +76,10 @@ interface IMapleLoanLike {
         uint256[2] memory fees_
     );
 
+    function getUnaccountedAmount(address asset_) external returns (uint256 unaccountedAmount_);
+
+    function impairLoan() external;
+
     function isImpaired() external view returns (bool isImpaired_);
 
     function nextPaymentDueDate() external view returns (uint256 nextPaymentDueDate_);
@@ -98,7 +102,7 @@ interface IMapleLoanLike {
 
     function repossess(address destination_) external returns (uint256 collateralRepossessed_, uint256 fundsRepossessed_);
 
-    function impairLoan() external;
+    function skim(address token_, address destination_) external returns (uint256 skimmed_);
 
 }
 
