@@ -142,7 +142,11 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         uint256 previousRate_      = _handlePreviousPaymentAccounting(loan_);
         uint256 previousPrincipal_ = IMapleLoanLike(loan_).principal();
 
-        if (principalIncrease_ > 0) IPoolManagerLike(poolManager).requestFunds(loan_, principalIncrease_);
+        _skimFundsFromLoan(loan_);
+
+        if (principalIncrease_ > 0) {
+            IPoolManagerLike(poolManager).requestFunds(loan_, principalIncrease_);
+        }
 
         // Perform the refinancing, updating the loan state.
         IMapleLoanLike(loan_).acceptNewTerms(refinancer_, deadline_, calls_);
@@ -172,16 +176,10 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         _advanceGlobalPaymentAccounting();
 
-        address fundsAsset_  = fundsAsset;
-        address poolManager_ = poolManager;
-        uint256 principal_   = IMapleLoanLike(loan_).principalRequested();
+        uint256 principal_ = IMapleLoanLike(loan_).principalRequested();
 
-        // Transfer all unaccounted assets from the loan to the pool.
-        if (IMapleLoanLike(loan_).getUnaccountedAmount(fundsAsset_) > 0) {
-            IMapleLoanLike(loan_).skim(fundsAsset_, IPoolManagerLike(poolManager_).pool());
-        }
-
-        IPoolManagerLike(poolManager_).requestFunds(loan_, principal_);
+        _skimFundsFromLoan(loan_);
+        IPoolManagerLike(poolManager).requestFunds(loan_, principal_);
         IMapleLoanLike(loan_).fundLoan();
 
         emit PrincipalOutUpdated(principalOut += _uint128(principal_));
@@ -720,6 +718,15 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         require(_transfer(fundsAsset_, _pool(),         principal_ + netInterest_), "LM:DCF:TRANSFER_P");
         require(_transfer(fundsAsset_, poolDelegate(), delegateFee_),               "LM:DCF:TRANSFER_PD");
         require(_transfer(fundsAsset_, _treasury(),     platformFee_),              "LM:DCF:TRANSFER_MT");
+    }
+
+    function _skimFundsFromLoan(address loan_) internal {
+        address fundsAsset_ = fundsAsset;
+
+        if (IMapleLoanLike(loan_).getUnaccountedAmount(fundsAsset_) == 0) return;
+
+        // Transfer all unaccounted assets from the loan to the pool.
+        IMapleLoanLike(loan_).skim(fundsAsset_, IPoolManagerLike(poolManager).pool());
     }
 
     function _transfer(address asset_, address to_, uint256 amount_) internal returns (bool success_) {
