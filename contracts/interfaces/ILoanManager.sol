@@ -94,6 +94,10 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     /*** External Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
+    // NOTE: setPendingLender and acceptPendingLender were not implemented in the LoanManager even though they exist on the Loan
+    //       contract. This is because the Loan will support this functionality always, but it was not deemed necessary for the
+    //       LoanManager to support this functionality.
+
     /**
      *  @dev   Accepts new loan terms triggering a loan refinance.
      *  @param loan_              Loan to be refinanced.
