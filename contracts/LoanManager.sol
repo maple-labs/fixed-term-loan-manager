@@ -394,6 +394,8 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         // and finish should use that info and execute the liquidation and accounting updates.
         LiquidationInfo memory liquidationInfo_ = liquidationInfo[loan_];
 
+        require(liquidationInfo_.liquidator != address(0), "LM:FCL:NOT_LIQUIDATED");
+
         // Reduce principal out, since it has been accounted for in the liquidation.
         emit PrincipalOutUpdated(principalOut -= liquidationInfo_.principal);
 

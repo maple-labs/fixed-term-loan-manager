@@ -468,12 +468,36 @@ contract FinishCollateralLiquidationTests is TestBase {
         uint256 nextPaymentDueDate = MockLoan(loan).nextPaymentDueDate();
         vm.warp(nextPaymentDueDate);
 
+        MockLoan(loan).__setCollateral(1_000_000);
+        collateralAsset.mint(loan, 1_000_000);
+
         vm.prank(address(poolManager));
         loanManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         vm.expectRevert("LM:FCL:NOT_PM");
         loanManager.finishCollateralLiquidation(address(loan));
 
+        vm.prank(address(poolManager));
+        loanManager.finishCollateralLiquidation(address(loan));
+    }
+
+    function test_finishCollateralLiquidation_callBeforeTriggerDefault() public {
+        uint256 nextPaymentDueDate = MockLoan(loan).nextPaymentDueDate();
+        vm.warp(nextPaymentDueDate);
+
+        vm.expectRevert("LM:FCL:NOT_LIQUIDATED");
+        vm.prank(address(poolManager));
+        loanManager.finishCollateralLiquidation(address(loan));
+    }
+
+    function test_finishCollateralLiquidation_callAfterTriggerDefaultOnUncollateralizedLoan() public {
+        uint256 nextPaymentDueDate = MockLoan(loan).nextPaymentDueDate();
+        vm.warp(nextPaymentDueDate);
+
+        vm.prank(address(poolManager));
+        loanManager.triggerDefault(address(loan), address(liquidatorFactory));
+
+        vm.expectRevert("LM:FCL:NOT_LIQUIDATED");
         vm.prank(address(poolManager));
         loanManager.finishCollateralLiquidation(address(loan));
     }
