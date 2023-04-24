@@ -228,7 +228,7 @@ contract SetAllowedSlippage_SetterTests is TestBase {
     }
 
     function test_setAllowedSlippage_noAuth() external {
-        vm.expectRevert("LM:SAS:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.setAllowedSlippage(address(collateralAsset), 0);
     }
 
@@ -264,7 +264,7 @@ contract SetMinRatio_SetterTests is TestBase {
     }
 
     function test_setMinRatio_noAuth() external {
-        vm.expectRevert("LM:SMR:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.setMinRatio(address(collateralAsset), 0);
     }
 
@@ -474,7 +474,7 @@ contract FinishCollateralLiquidationTests is TestBase {
         vm.prank(address(poolManager));
         loanManager.triggerDefault(address(loan), address(liquidatorFactory));
 
-        vm.expectRevert("LM:FCL:NOT_PM");
+        vm.expectRevert("LM:NOT_PM");
         loanManager.finishCollateralLiquidation(address(loan));
 
         vm.prank(address(poolManager));
@@ -610,7 +610,7 @@ contract ImpairLoanTests is TestBase {
     }
 
     function test_impairLoan_notAuthorized() public {
-        vm.expectRevert("LM:IL:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.impairLoan(address(loan));
     }
 
@@ -3254,7 +3254,7 @@ contract TriggerDefaultTests is TestBase {
         uint256 nextPaymentDueDate = MockLoan(loan).nextPaymentDueDate();
         vm.warp(nextPaymentDueDate);
 
-        vm.expectRevert("LM:TD:NOT_PM");
+        vm.expectRevert("LM:NOT_PM");
         loanManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         vm.prank(address(poolManager));
@@ -4250,7 +4250,7 @@ contract UintCastingTests is TestBase {
 contract UpdateAccountingFailureTests is TestBase {
 
     function test_updateAccounting_notPoolDelegate() external {
-        vm.expectRevert("LM:UA:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.updateAccounting();
 
         vm.prank(poolDelegate);
@@ -4258,7 +4258,7 @@ contract UpdateAccountingFailureTests is TestBase {
     }
 
     function test_updateAccounting_notGovernor() external {
-        vm.expectRevert("LM:UA:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.updateAccounting();
 
         vm.prank(governor);
