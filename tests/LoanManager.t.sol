@@ -110,7 +110,7 @@ contract MigrateTests is TestBase {
     }
 
     function test_migrate_notFactory() external {
-        vm.expectRevert("LM:M:NOT_FACTORY");
+        vm.expectRevert("LM:NOT_FACTORY");
         loanManager.migrate(migrator, "");
     }
 
@@ -143,7 +143,7 @@ contract SetImplementationTests is TestBase {
     }
 
     function test_setImplementation_notFactory() external {
-        vm.expectRevert("LM:SI:NOT_FACTORY");
+        vm.expectRevert("LM:NOT_FACTORY");
         loanManager.setImplementation(newImplementation);
     }
 
@@ -3564,8 +3564,10 @@ contract FundLoanTests is TestBase {
         assertEq(loanManager.domainEnd(),         0);
         assertEq(loanManager.domainStart(),       0);
 
-        loan.__setPrincipal(principalRequested);  // Simulate intermediate state from funding.
+        loan.__setPrincipal(principalRequested);
         loan.__setUnaccountedAmount(1);           // Add unaccounted funds to the loan.
+
+        fundsAsset.mint(address(loan), 1);
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
@@ -3582,7 +3584,7 @@ contract FundLoanTests is TestBase {
         ) = loanManager.payments(1);
 
         // Check loan information
-        assertEq(incomingNetInterest_,       0.8e18); // 1e18 of interest minus management fees
+        assertEq(incomingNetInterest_,       0.8e18);                     // 1e18 of interest minus management fees
         assertEq(startDate_,                 block.timestamp);
         assertEq(paymentDueDate_,            block.timestamp + 100);
         assertEq(platformManagementFeeRate_, platformManagementFeeRate);
@@ -3590,7 +3592,7 @@ contract FundLoanTests is TestBase {
 
         assertEq(loanManager.principalOut(),      principalRequested);
         assertEq(loanManager.accountedInterest(), 0);
-        assertEq(loanManager.issuanceRate(),      0.8e46);  // 0.7e18 * 1e30 / 100 = 0.7e46
+        assertEq(loanManager.issuanceRate(),      0.8e46);              // 0.7e18 * 1e30 / 100 = 0.7e46
         assertEq(loanManager.domainEnd(),         START + 100);
         assertEq(loanManager.domainStart(),       START);
     }
@@ -4483,7 +4485,7 @@ contract DistributeLiquidationFundsTests is TestBase {
         fundsAsset.mint(address(loanManager), 300);
 
         vm.expectRevert("LM:DLF:TRANSFER_B");
-        loanManager.__disburseLiquidationFunds(address(loan), 100, 100, 100);
+        loanManager.__distributeLiquidationFunds(address(loan), 100, 100, 100);
     }
 
     function test_distributeLiquidationFunds_poolNotSet() external {
@@ -4495,7 +4497,7 @@ contract DistributeLiquidationFundsTests is TestBase {
         fundsAsset.mint(address(loanManager), 300);
 
         vm.expectRevert("LM:DLF:TRANSFER_P");
-        loanManager.__disburseLiquidationFunds(address(loan), 100, 100, 100);
+        loanManager.__distributeLiquidationFunds(address(loan), 100, 100, 100);
     }
 
     function test_distributeLiquidationFunds_mapleTreasuryNotSet() external {
@@ -4507,7 +4509,7 @@ contract DistributeLiquidationFundsTests is TestBase {
         fundsAsset.mint(address(loanManager), 300);
 
         vm.expectRevert("LM:DLF:TRANSFER_MT");
-        loanManager.__disburseLiquidationFunds(address(loan), 100, 100, 100);
+        loanManager.__distributeLiquidationFunds(address(loan), 100, 100, 100);
     }
 
 }

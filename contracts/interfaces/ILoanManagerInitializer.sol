@@ -16,7 +16,7 @@ interface ILoanManagerInitializer {
      */
     function decodeArguments(bytes calldata calldata_) external pure returns (address poolManager_);
 
-     /**
+    /**
      *  @dev    Encodes the initialization arguments of a loan manager.
      *  @param  poolManager_ Address of the pool manager.
      *  @return calldata_    ABI encoded address of the pool manager.

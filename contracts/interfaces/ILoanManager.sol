@@ -45,7 +45,7 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
      *  @param loan_                  The address of the loan contract.
      *  @param delegateManagementFee_ The amount of delegate management fee paid.
      *  @param platformManagementFee_ The amount of platform management fee paid.
-    */
+     */
     event ManagementFeesPaid(address indexed loan_, uint256 delegateManagementFee_, uint256 platformManagementFee_);
 
     /**
@@ -192,32 +192,32 @@ interface ILoanManager is IMapleProxied, ILoanManagerStorage {
     function updateAccounting() external;
 
     /**************************************************************************************************************************************/
-    /*** View Functions                                                                                                                 ***/
+    /*** Pure/View Functions                                                                                                            ***/
     /**************************************************************************************************************************************/
-
-    /**
-     *  @dev    Returns the precision used for the contract.
-     *  @return precision_ The precision used for the contract.
-     */
-    function PRECISION() external returns (uint256 precision_);
 
     /**
      *  @dev    Returns the value considered as the hundred percent.
      *  @return hundredPercent_ The value considered as the hundred percent.
      */
-    function HUNDRED_PERCENT() external returns (uint256 hundredPercent_);
+    function HUNDRED_PERCENT() external pure returns (uint256 hundredPercent_);
 
     /**
-     *  @dev    Gets the amount of assets under the management of the contract.
-     *  @return assetsUnderManagement_ The amount of assets under the management of the contract.
+     *  @dev    Returns the precision used for the contract.
+     *  @return precision_ The precision used for the contract.
      */
-    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
+    function PRECISION() external pure returns (uint256 precision_);
 
     /**
      *  @dev    Gets the amount of accrued interest up until this point in time.
      *  @return accruedInterest_ The amount of accrued interest up until this point in time.
      */
     function accruedInterest() external view returns (uint256 accruedInterest_);
+
+    /**
+     *  @dev    Gets the amount of assets under the management of the contract.
+     *  @return assetsUnderManagement_ The amount of assets under the management of the contract.
+     */
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
 
     /**
      *  @dev    Gets the expected amount of an asset given the input amount.

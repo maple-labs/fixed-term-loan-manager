@@ -42,9 +42,9 @@ interface IMapleGlobalsLike {
     function isValidScheduledCall(address caller_, address contract_, bytes32 functionId_, bytes calldata callData_)
         external view returns (bool isValid_);
 
-    function platformManagementFeeRate(address poolManager_) external view returns (uint256 platformManagementFeeRate_);
-
     function mapleTreasury() external view returns (address mapleTreasury_);
+
+    function platformManagementFeeRate(address poolManager_) external view returns (uint256 platformManagementFeeRate_);
 
     function securityAdmin() external view returns (address securityAdmin_);
 

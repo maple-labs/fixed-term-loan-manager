@@ -9,12 +9,12 @@ contract LoanManagerHarness is LoanManager {
         paymentId_ = _addPaymentToList(paymentDueDate_);
     }
 
-    function __disburseLiquidationFunds(address loan_, uint256 recoveredFunds_, uint256 platformFees_, uint256 remainingLosses_) external {
-        _disburseLiquidationFunds(loan_, recoveredFunds_, platformFees_, remainingLosses_);
-    }
-
     function __distributeClaimedFunds(address loan_, uint256 principal_, uint256 interest_) external {
         _distributeClaimedFunds(loan_, principal_, interest_);
+    }
+
+    function __distributeLiquidationFunds(address loan_, uint256 recoveredFunds_, uint256 platformFees_, uint256 remainingLosses_) external {
+        _distributeLiquidationFunds(loan_, recoveredFunds_, platformFees_, remainingLosses_);
     }
 
     function __removePaymentFromList(uint256 paymentId_) external {

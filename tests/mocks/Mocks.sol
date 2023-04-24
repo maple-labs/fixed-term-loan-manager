@@ -73,10 +73,6 @@ contract MockGlobals {
         _isFunctionPaused = paused_;
     }
 
-    function __setProtocolPaused(bool paused_) external {
-        protocolPaused = paused_;
-    }
-
     function __setSecurityAdmin(address securityAdmin_) external {
         securityAdmin = securityAdmin_;
     }

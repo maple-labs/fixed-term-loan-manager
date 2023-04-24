@@ -31,8 +31,8 @@ import { LoanManagerStorage } from "./proxy/LoanManagerStorage.sol";
 
 contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage {
 
-    uint256 public override constant PRECISION       = 1e30;
     uint256 public override constant HUNDRED_PERCENT = 1e6;   // 100.0000%
+    uint256 public override constant PRECISION       = 1e30;
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -46,6 +46,11 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         _;
 
         _locked = 1;
+    }
+
+    modifier onlyFactory() {
+        _revertIfNotFactory();
+        _;
     }
 
     modifier onlyPoolDelegate() {
@@ -72,15 +77,12 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /*** Upgradeability Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
-    function migrate(address migrator_, bytes calldata arguments_) external override whenNotPaused {
-        require(msg.sender == _factory(),        "LM:M:NOT_FACTORY");
+    function migrate(address migrator_, bytes calldata arguments_) external override whenNotPaused onlyFactory {
         require(_migrate(migrator_, arguments_), "LM:M:FAILED");
     }
 
-    function setImplementation(address implementation_) external override whenNotPaused {
-        require(msg.sender == _factory(), "LM:SI:NOT_FACTORY");
-
-        _setImplementation(implementation_);
+    function setImplementation(address implementation_) external override whenNotPaused onlyFactory {
+       _setImplementation(implementation_);
     }
 
     function upgrade(uint256 version_, bytes calldata arguments_) external override whenNotPaused {
@@ -191,9 +193,9 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     }
 
     function rejectNewTerms(
-        address loan_,
-        address refinancer_,
-        uint256 deadline_,
+        address          loan_,
+        address          refinancer_,
+        uint256          deadline_,
         bytes[] calldata calls_
     ) external override whenNotPaused onlyPoolDelegate {
         IMapleLoanLike(loan_).rejectNewTerms(refinancer_, deadline_, calls_);
@@ -410,7 +412,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         ILiquidatorLike(liquidationInfo_.liquidator).pullFunds(fundsAsset_, address(this), recoveredFunds_);
 
-        ( remainingLosses_, platformFees_ ) = _disburseLiquidationFunds(loan_, recoveredFunds_, platformFees_, remainingLosses_);
+        ( remainingLosses_, platformFees_ ) = _distributeLiquidationFunds(loan_, recoveredFunds_, platformFees_, remainingLosses_);
     }
 
     function triggerDefault(address loan_, address liquidatorFactory_)
@@ -637,7 +639,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         // If any funds recovered, disburse them to relevant accounts and update return variables.
         ( remainingLosses_, updatedPlatformFees_ ) = recoveredFunds_ == 0
             ? (remainingLosses_, platformFees_)
-            : _disburseLiquidationFunds(loan_, recoveredFunds_, platformFees_, remainingLosses_);
+            : _distributeLiquidationFunds(loan_, recoveredFunds_, platformFees_, remainingLosses_);
 
         if (isImpaired_) {
             // Remove unrealized losses that `impairLoan` previously accounted for.
@@ -661,29 +663,6 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /*** Internal Funds Distribution Functions                                                                                          ***/
     /**************************************************************************************************************************************/
 
-    function _disburseLiquidationFunds(address loan_, uint256 recoveredFunds_, uint256 platformFees_, uint256 remainingLosses_)
-        internal returns (uint256 updatedRemainingLosses_, uint256 updatedPlatformFees_)
-    {
-        uint256 toTreasury_ = _min(recoveredFunds_, platformFees_);
-
-        recoveredFunds_ -= toTreasury_;
-
-        updatedPlatformFees_ = (platformFees_ -= toTreasury_);
-
-        uint256 toPool_ = _min(recoveredFunds_, remainingLosses_);
-
-        recoveredFunds_ -= toPool_;
-
-        updatedRemainingLosses_ = (remainingLosses_ -= toPool_);
-
-        address fundsAsset_ = fundsAsset;
-
-        require(_transfer(fundsAsset_, IMapleLoanLike(loan_).borrower(), recoveredFunds_), "LM:DLF:TRANSFER_B");
-        require(_transfer(fundsAsset_, _pool(),                          toPool_),         "LM:DLF:TRANSFER_P");
-        require(_transfer(fundsAsset_, _treasury(),                      toTreasury_),     "LM:DLF:TRANSFER_MT");
-
-    }
-
     function _distributeClaimedFunds(address loan_, uint256 principal_, uint256 interest_) internal {
         uint256 paymentId_ = paymentIdOf[loan_];
 
@@ -705,6 +684,28 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         require(_transfer(fundsAsset_, _pool(),         principal_ + netInterest_), "LM:DCF:TRANSFER_P");
         require(_transfer(fundsAsset_, poolDelegate(), delegateFee_),               "LM:DCF:TRANSFER_PD");
         require(_transfer(fundsAsset_, _treasury(),     platformFee_),              "LM:DCF:TRANSFER_MT");
+    }
+
+    function _distributeLiquidationFunds(address loan_, uint256 recoveredFunds_, uint256 platformFees_, uint256 remainingLosses_)
+        internal returns (uint256 updatedRemainingLosses_, uint256 updatedPlatformFees_)
+    {
+        uint256 toTreasury_ = _min(recoveredFunds_, platformFees_);
+
+        recoveredFunds_ -= toTreasury_;
+
+        updatedPlatformFees_ = (platformFees_ -= toTreasury_);
+
+        uint256 toPool_ = _min(recoveredFunds_, remainingLosses_);
+
+        recoveredFunds_ -= toPool_;
+
+        updatedRemainingLosses_ = (remainingLosses_ -= toPool_);
+
+        address fundsAsset_ = fundsAsset;
+
+        require(_transfer(fundsAsset_, IMapleLoanLike(loan_).borrower(), recoveredFunds_), "LM:DLF:TRANSFER_B");
+        require(_transfer(fundsAsset_, _pool(),                     toPool_),              "LM:DLF:TRANSFER_P");
+        require(_transfer(fundsAsset_, _treasury(),                 toTreasury_),          "LM:DLF:TRANSFER_MT");
     }
 
     function _skimFundsFromLoan(address loan_) internal {
@@ -850,12 +851,6 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         platformFees_ = platformManagementFees_ + serviceFees_[1];
     }
 
-    function _getPaymentAccruedInterest(uint256 startTime_, uint256 endTime_, uint256 paymentIssuanceRate_, uint256 refinanceInterest_)
-        internal pure returns (uint256 accruedInterest_)
-    {
-        accruedInterest_ = (endTime_ - startTime_) * paymentIssuanceRate_ / PRECISION + refinanceInterest_;
-    }
-
     function _getInterestAndFeesFromLiquidationInfo(address loan_)
         internal view returns (uint256 netInterest_, uint256 netLateInterest_, uint256 platformFees_)
     {
@@ -868,6 +863,12 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
     function _getNetInterest(uint256 interest_, uint256 feeRate_) internal pure returns (uint256 netInterest_) {
         netInterest_ = interest_ * (HUNDRED_PERCENT - feeRate_) / HUNDRED_PERCENT;
+    }
+
+    function _getPaymentAccruedInterest(uint256 startTime_, uint256 endTime_, uint256 paymentIssuanceRate_, uint256 refinanceInterest_)
+        internal pure returns (uint256 accruedInterest_)
+    {
+        accruedInterest_ = (endTime_ - startTime_) * paymentIssuanceRate_ / PRECISION + refinanceInterest_;
     }
 
     /**************************************************************************************************************************************/
@@ -930,10 +931,6 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
     /*** Loan Manager View Functions                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    function assetsUnderManagement() public view virtual override returns (uint256 assetsUnderManagement_) {
-        assetsUnderManagement_ = principalOut + accountedInterest + accruedInterest();
-    }
-
     function accruedInterest() public view override returns (uint256 accruedInterest_) {
         uint256 issuanceRate_ = issuanceRate;
 
@@ -941,6 +938,10 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
         // If before domain end, use current timestamp.
         accruedInterest_ = issuanceRate_ * (_min(block.timestamp, domainEnd) - domainStart) / PRECISION;
+    }
+
+    function assetsUnderManagement() public view virtual override returns (uint256 assetsUnderManagement_) {
+        assetsUnderManagement_ = principalOut + accountedInterest + accruedInterest();
     }
 
     function getExpectedAmount(address collateralAsset_, uint256 swapAmount_) public view override returns (uint256 returnAmount_) {
@@ -998,6 +999,10 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
 
     function _pool() internal view returns (address pool_) {
         pool_ = IPoolManagerLike(poolManager).pool();
+    }
+
+    function _revertIfNotFactory() internal view {
+        require(msg.sender == _factory(), "LM:NOT_FACTORY");
     }
 
     function _revertIfNotPoolDelegate() internal view {
