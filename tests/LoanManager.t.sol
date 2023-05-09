@@ -4572,3 +4572,45 @@ contract RejectNewTermsTests is TestBase {
     }
 
 }
+
+contract AcceptNewTermsTests is TestBase {
+
+    address refinancer = address(new Address());
+
+    MockLoan loan;
+
+    function setUp() public override {
+        super.setUp();
+
+        loan = new MockLoan(address(collateralAsset), address(fundsAsset));
+
+        // Setup next payment information
+        loan.__setFactory(address(loanFactory));
+        loan.__setPaymentsRemaining(1);
+        loan.__setPrincipal(1_000_000);
+        loan.__setPrincipalRequested(1_000_000);
+        loan.__setNextPaymentInterest(125);
+        loan.__setNextPaymentDueDate(START + 10_000);
+
+        vm.prank(address(poolDelegate));
+        loanManager.fund(address(loan));
+
+        globals.__setIsBorrower(false);
+    }
+
+    function test_acceptNewTerms_invalidBorrower() external {
+        // Set Refinance values
+        loan.__setRefinanceInterest(125);  // Accrued gross interest from first payment cycle (accounted for in real loan).
+        loan.__setRefinancePrincipal(2_000_000);
+        loan.__setPrincipalRequested(2_000_000);
+        loan.__setRefinanceNextPaymentInterest(375);
+        loan.__setRefinanceNextPaymentDueDate(START + 20_000);
+
+        vm.warp(START + 10_000);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:ANT:INVALID_BORROWER");
+        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, new bytes[](0), 1_000_000);
+    }
+
+}

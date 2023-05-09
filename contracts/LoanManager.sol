@@ -149,6 +149,7 @@ contract LoanManager is ILoanManager, MapleProxiedInternals, LoanManagerStorage 
         _skimFundsFromLoan(loan_);
 
         if (principalIncrease_ > 0) {
+            require(IMapleGlobalsLike(_globals()).isBorrower(IMapleLoanLike(loan_).borrower()), "LM:ANT:INVALID_BORROWER");
             IPoolManagerLike(poolManager).requestFunds(loan_, principalIncrease_);
         }
 
