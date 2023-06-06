@@ -33,8 +33,8 @@ Versions of dependencies can be checked with `git submodule status`.
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
 
 ```sh
-git clone git@github.com:maple-labs/pool-v2-private.git
-cd pool-v2-private
+git clone git@github.com:maple-labs/fixed-term-loan-manager.git
+cd fixed-term-loan-manager
 forge install
 ```
 
