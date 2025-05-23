@@ -65,7 +65,7 @@ contract CreateInstanceTests is Test {
 
     function test_createInstance_success_asPoolDeployer() external {
         vm.prank(poolDeployer);
-        MapleLoanManager loanManager_ = MapleLoanManager(factory.createInstance(abi.encode(address(poolManager)), "SALT"));
+        LoanManager loanManager_ = LoanManager(factory.createInstance(abi.encode(address(poolManager)), "SALT"));
 
         assertEq(loanManager_.fundsAsset(),  asset);
         assertEq(loanManager_.poolManager(), address(poolManager));
