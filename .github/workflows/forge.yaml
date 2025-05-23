@@ -42,7 +42,7 @@ jobs:
       run: |
         forge coverage --report lcov
     - name: Report code coverage
-      uses: zgosalvez/github-actions-report-lcov@v4s
+      uses: zgosalvez/github-actions-report-lcov@v4
       with:
         coverage-files: lcov.info
         minimum-coverage: 65
